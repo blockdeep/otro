@@ -1,0 +1,53 @@
+[package]
+name = "pallet-account-abstraction"
+version = "0.0.1"
+description = "Pallet to provide smart accounts"
+authors = ["José Molina <jose.molina@blockdeep.io>"]
+edition = "2021"
+license = "MIT-0"
+publish = false
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[dependencies]
+parity-scale-codec = { version = "3.6.12", default-features = false, features = [
+	"derive",
+] }
+scale-info = { version = "2.11.3", default-features = false, features = [
+	"derive",
+] }
+libsecp256k1 = { version = "0.7.1", default-features = false }
+frame-benchmarking = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-3", default-features = false, optional = true }
+frame-support = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-3", default-features = false }
+frame-system = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-3", default-features = false }
+sp-std = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-3", default-features = false }
+sp-runtime = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-3", default-features = false }
+sp-core = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-3", default-features = false }
+sp-io = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-3", default-features = false }
+
+[dev-dependencies]
+hex-literal = "0.4.1"
+sp-keystore = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-3" }
+
+[features]
+default = ["std"]
+std = [
+	"parity-scale-codec/std",
+	"frame-benchmarking/std",
+	"frame-support/std",
+	"frame-system/std",
+	"scale-info/std",
+	"sp-std/std",
+	"sp-core/std",
+]
+runtime-benchmarks = [
+	"frame-benchmarking/runtime-benchmarks",
+	"frame-support/runtime-benchmarks",
+	"frame-system/runtime-benchmarks",
+]
+try-runtime = [
+	"frame-support/try-runtime",
+	"frame-system/try-runtime",
+	"sp-runtime/try-runtime",
+]
