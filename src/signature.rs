@@ -32,34 +32,6 @@ impl<T: Config> AbstractCredential for AbstractCredentialProvider<T> {
 	}
 }
 
-#[derive(
-	Eq, PartialEq, Clone, Encode, Decode, sp_core::RuntimeDebug, TypeInfo, Ord, PartialOrd,
-)]
-pub struct NativeOrAbstractSigner<NativeSigner>(NativeSigner);
-
-impl<NativeSigner> IdentifyAccount for NativeOrAbstractSigner<NativeSigner>
-where
-	NativeSigner: IdentifyAccount,
-{
-	type AccountId = NativeSigner::AccountId;
-
-	fn into_account(self) -> Self::AccountId {
-		self.0.into_account()
-	}
-}
-
-impl<NativeSigner> From<NativeSigner> for NativeOrAbstractSigner<NativeSigner> {
-	fn from(signer: NativeSigner) -> Self {
-		Self(signer)
-	}
-}
-
-impl<NativeSigner> NativeOrAbstractSigner<NativeSigner> {
-	pub fn new(signer: NativeSigner) -> Self {
-		Self(signer)
-	}
-}
-
 #[derive(Eq, PartialEq, Clone, Encode, Decode, sp_core::RuntimeDebug, TypeInfo)]
 pub enum NativeOrAbstractSignature<Credential, NativeSignature> {
 	Native(NativeSignature),
@@ -87,13 +59,11 @@ impl<Credential, NativeSignature> NativeOrAbstractSignature<Credential, NativeSi
 
 impl<Credential, NativeSignature> Verify for NativeOrAbstractSignature<Credential, NativeSignature>
 where
-	Credential: AbstractCredential,
-	NativeSignature: Clone + Verify,
-	<<NativeSignature as Verify>::Signer as IdentifyAccount>::AccountId: Decode + Clone,
-	<Credential as AbstractCredential>::AccountId:
-		From<<<NativeSignature as Verify>::Signer as IdentifyAccount>::AccountId>,
+	NativeSignature: Verify,
+	Credential:
+		AbstractCredential<AccountId = <NativeSignature::Signer as IdentifyAccount>::AccountId>,
 {
-	type Signer = NativeOrAbstractSigner<NativeSignature::Signer>;
+	type Signer = NativeSignature::Signer;
 
 	fn verify<L: Lazy<[u8]>>(
 		&self,
@@ -105,7 +75,7 @@ where
 			Self::Abstract(public_key, signature, _) => Credential::is_valid(
 				public_key.as_slice(),
 				signature.as_slice(),
-				&signer.clone().into(),
+				&signer,
 				msg.get(),
 			),
 		}
@@ -122,17 +92,6 @@ mod tests {
 	use sp_runtime::{MultiSignature, MultiSigner};
 
 	type TestCredentialProvider = AbstractCredentialProvider<Test>;
-
-	#[test]
-	fn native_signer_into_account_should_work() {
-		let native_signer = MultiSigner::Sr25519(Default::default());
-
-		let signer_1: NativeOrAbstractSigner<MultiSigner> = native_signer.clone().into();
-		assert_eq!(native_signer.clone().into_account(), signer_1.into_account());
-
-		let signer_2 = NativeOrAbstractSigner::new(native_signer.clone());
-		assert_eq!(native_signer.into_account(), signer_2.into_account());
-	}
 
 	#[test]
 	fn native_or_abstract_signature_conversion_should_work() {
@@ -187,7 +146,7 @@ mod tests {
 
 			let native_or_abstract_signature: NativeOrAbstractSignature<TestCredentialProvider, _> =
 				NativeOrAbstractSignature::new_native(native_signature);
-			let native_or_abstract_signer: NativeOrAbstractSigner<_> = native_signer.clone().into();
+			let native_or_abstract_signer = native_signer.clone();
 			assert!(native_or_abstract_signature
 				.verify(&payload[..], &native_or_abstract_signer.into_account()));
 		});
