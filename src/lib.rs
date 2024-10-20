@@ -37,11 +37,15 @@
 //!
 //! ```rust
 //! use sp_runtime::MultiSignature;
+//! use sp_runtime::traits::{IdentifyAccount, Verify};
 //! use pallet_account_abstraction::{AbstractCredentialProvider, NativeOrAbstractSignature};
-//! struct Runtime;  // your defined runtime
 //!
-//! type NativeSignature = MultiSignature;  // or any other native signature type
-//! type Signature = NativeOrAbstractSignature<
+//! pub struct Runtime;  // your defined runtime
+//!
+//! pub type NativeSignature = MultiSignature;  // or any other native signature type
+//! pub type AccountId = <<NativeSignature as Verify>::Signer as IdentifyAccount>::AccountId;
+//!
+//! pub type Signature = NativeOrAbstractSignature<
 //!     AbstractCredentialProvider<Runtime>,
 //!     NativeSignature,
 //! >;
