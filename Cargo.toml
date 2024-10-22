@@ -18,6 +18,7 @@ scale-info = { version = "2.11.3", default-features = false, features = [
 	"derive",
 ] }
 libsecp256k1 = { version = "0.7.1", default-features = false }
+blst = { version = "0.3.13", default-features = false }
 frame-benchmarking = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-3", default-features = false, optional = true }
 frame-support = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-3", default-features = false }
 frame-system = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-3", default-features = false }
