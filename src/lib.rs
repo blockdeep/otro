@@ -106,6 +106,7 @@ pub mod pallet {
 		Sr25519,
 		/// An ECDSA signature.
 		Ecdsa,
+		#[cfg(feature = "bls")]
 		/// A BLS signature.
 		Bls,
 	}
@@ -372,6 +373,7 @@ pub mod pallet {
 						.map_err(|_| Error::<T>::InvalidPublicKey)?;
 					public.to_vec()
 				},
+				#[cfg(feature = "bls")]
 				CredentialType::Bls => {
 					let public = blst::min_pk::PublicKey::deserialize(public_key.as_slice())
 						.map_err(|_| Error::<T>::InvalidPublicKey)?;
@@ -421,6 +423,7 @@ pub mod pallet {
 						.map_err(|_| Error::<T>::InvalidPublicKey)?;
 					ecdsa_verify(&signature, payload, &public_key)
 				},
+				#[cfg(feature = "bls")]
 				CredentialType::Bls => {
 					let signature = blst::min_pk::Signature::deserialize(signature_bytes)
 						.map_err(|_| Error::<T>::InvalidSignature)?;

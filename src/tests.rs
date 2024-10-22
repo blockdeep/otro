@@ -367,35 +367,40 @@ fn check_abstract_signature_ed25519() {
 	});
 }
 
-#[test]
-fn check_abstract_signature_bls() {
-	new_test_ext().execute_with(|| {
-		initialize_to_block(1);
-		let owner = acc(1);
-		let seed = [5u8; 32];
-		let private = blst::min_pk::SecretKey::key_gen(&seed, &[])
-			.expect("BLS private key creation from seed should work");
-		let public = private.sk_to_pk();
-		let public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
-			public.serialize().as_slice().to_vec().try_into().unwrap();
-		AccountAbstraction::register_credentials(
-			RuntimeOrigin::signed(owner.clone()),
-			vec![(public_key_bytes.clone(), CredentialConfig { cred_type: CredentialType::Bls })],
-		)
-		.expect("BLS public key registration should be valid");
-		assert_eq!(
-			Credentials::<Test>::get(owner.clone(), public_key_bytes.clone()),
-			Some(CredentialConfig { cred_type: CredentialType::Bls })
-		);
+#[cfg(feature = "bls")]
+mod bls {
+	use super::*;
 
-		let payload = b"BLS signature should work";
-		let signature = private.sign(payload.as_slice(), &[], &[]);
-		AccountAbstraction::check_abstract_signature(
-			&owner,
-			public_key_bytes.as_slice(),
-			signature.to_bytes().as_slice(),
-			payload.as_slice(),
-		)
-		.expect("BLS abstract signature should be valid");
-	});
+	#[test]
+	fn check_abstract_signature_bls() {
+		new_test_ext().execute_with(|| {
+			initialize_to_block(1);
+			let owner = acc(1);
+			let seed = [5u8; 32];
+			let private = blst::min_pk::SecretKey::key_gen(&seed, &[])
+				.expect("BLS private key creation from seed should work");
+			let public = private.sk_to_pk();
+			let public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
+				public.serialize().as_slice().to_vec().try_into().unwrap();
+			AccountAbstraction::register_credentials(
+				RuntimeOrigin::signed(owner.clone()),
+				vec![(public_key_bytes.clone(), CredentialConfig { cred_type: CredentialType::Bls })],
+			)
+				.expect("BLS public key registration should be valid");
+			assert_eq!(
+				Credentials::<Test>::get(owner.clone(), public_key_bytes.clone()),
+				Some(CredentialConfig { cred_type: CredentialType::Bls })
+			);
+
+			let payload = b"BLS signature should work";
+			let signature = private.sign(payload.as_slice(), &[], &[]);
+			AccountAbstraction::check_abstract_signature(
+				&owner,
+				public_key_bytes.as_slice(),
+				signature.to_bytes().as_slice(),
+				payload.as_slice(),
+			)
+				.expect("BLS abstract signature should be valid");
+		});
+	}
 }
