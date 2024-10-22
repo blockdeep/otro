@@ -13,6 +13,16 @@ Key functionalities provided by this pallet include:
 - Registration and management of credentials for accounts.
 - Verification of transactions signed with either native or abstract signatures.
 
+## Supported signatures schemas
+
+Currently, the pallet supports the following signature schemas:
+- **SR25519**
+- **ED25519**
+- **ECDSA**
+- **BLS** only if the `bls` feature is enabled.
+
+Bear in mind that in all cases the payload is expected to be hashed with the `blake2_256` algorithm.
+
 ## Key Concepts
 
 ### Native and Abstract Signatures
@@ -53,6 +63,21 @@ pub type Signature = NativeOrAbstractSignature<
 ```
 
 You will also have to add the `pallet_account_abstraction` to your runtime.
+
+### Regarding MacOS users
+
+If the `bls` feature is enabled, you will need to use a different version of clang, since the OS-provided one cannot compile for wasm. To do so follow these steps:
+
+```shell
+# Install LLVM Clang
+brew install llvm
+
+# Verify the installation
+llvm-config --version
+
+# Export the correct PATH
+echo 'export PATH="/opt/homebrew/opt/llvm/bin:$PATH"' >> ~/.zshrc
+```
 
 ## Security Considerations
 
