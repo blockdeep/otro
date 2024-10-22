@@ -384,9 +384,12 @@ mod bls {
 				public.serialize().as_slice().to_vec().try_into().unwrap();
 			AccountAbstraction::register_credentials(
 				RuntimeOrigin::signed(owner.clone()),
-				vec![(public_key_bytes.clone(), CredentialConfig { cred_type: CredentialType::Bls })],
+				vec![(
+					public_key_bytes.clone(),
+					CredentialConfig { cred_type: CredentialType::Bls },
+				)],
 			)
-				.expect("BLS public key registration should be valid");
+			.expect("BLS public key registration should be valid");
 			assert_eq!(
 				Credentials::<Test>::get(owner.clone(), public_key_bytes.clone()),
 				Some(CredentialConfig { cred_type: CredentialType::Bls })
@@ -400,7 +403,74 @@ mod bls {
 				signature.to_bytes().as_slice(),
 				payload.as_slice(),
 			)
-				.expect("BLS abstract signature should be valid");
+			.expect("BLS abstract signature should be valid");
+		});
+	}
+
+	#[test]
+	fn register_credential_bls() {
+		new_test_ext().execute_with(|| {
+			initialize_to_block(1);
+			let owner = acc(1);
+			let invalid_public_key = blst::min_pk::SecretKey::key_gen(&[1u8; 32], &[]).unwrap();
+			let invalid_public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
+				invalid_public_key.serialize().as_slice().to_vec().try_into().unwrap();
+
+			let private = blst::min_pk::SecretKey::key_gen(&[5u8; 32], &[])
+				.expect("BLS private key creation from seed should work");
+			let public = private.sk_to_pk();
+			let public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
+				public.serialize().as_slice().to_vec().try_into().unwrap();
+			assert_eq!(Credentials::<Test>::get(owner.clone(), public_key_bytes.clone()), None);
+			assert_noop!(
+				AccountAbstraction::register_credentials(
+					RuntimeOrigin::signed(owner.clone()),
+					vec![(
+						public_key_bytes.clone(),
+						CredentialConfig { cred_type: CredentialType::Sr25519 },
+					)],
+				),
+				Error::<Test>::InvalidPublicKeyLength
+			);
+			assert_noop!(
+				AccountAbstraction::register_credentials(
+					RuntimeOrigin::signed(owner.clone()),
+					vec![(
+						public_key_bytes.clone(),
+						CredentialConfig { cred_type: CredentialType::Ed25519 },
+					)],
+				),
+				Error::<Test>::InvalidPublicKeyLength
+			);
+			assert_noop!(
+				AccountAbstraction::register_credentials(
+					RuntimeOrigin::signed(owner.clone()),
+					vec![(
+						invalid_public_key_bytes.clone(),
+						CredentialConfig { cred_type: CredentialType::Ecdsa },
+					)],
+				),
+				Error::<Test>::InvalidPublicKeyLength
+			);
+			AccountAbstraction::register_credentials(
+				RuntimeOrigin::signed(owner.clone()),
+				vec![(
+					public_key_bytes.clone(),
+					CredentialConfig { cred_type: CredentialType::Bls },
+				)],
+			)
+			.expect("BLS credential should be successfully registered");
+			assert_eq!(
+				Credentials::<Test>::get(owner.clone(), public_key_bytes.clone()),
+				Some(CredentialConfig { cred_type: CredentialType::Bls })
+			);
+			System::assert_last_event(RuntimeEvent::AccountAbstraction(
+				Event::CredentialRegistered {
+					account: owner.clone(),
+					public_key: public_key_bytes,
+					config: CredentialConfig { cred_type: CredentialType::Bls },
+				},
+			));
 		});
 	}
 }
