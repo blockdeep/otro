@@ -106,6 +106,9 @@ pub mod pallet {
 		Sr25519,
 		/// An ECDSA signature.
 		Ecdsa,
+		#[cfg(feature = "bls")]
+		/// A BLS signature.
+		Bls,
 	}
 
 	/// A credential configuration. Valid for a particular association of an AccountId with
@@ -370,6 +373,12 @@ pub mod pallet {
 						.map_err(|_| Error::<T>::InvalidPublicKey)?;
 					public.to_vec()
 				},
+				#[cfg(feature = "bls")]
+				CredentialType::Bls => {
+					let public = blst::min_pk::PublicKey::deserialize(public_key.as_slice())
+						.map_err(|_| Error::<T>::InvalidPublicKey)?;
+					public.serialize().as_slice().to_vec()
+				},
 			};
 			let truncated_public_key = BoundedVec::truncate_from(public_key);
 			Credentials::<T>::insert(who, truncated_public_key.clone(), config.clone());
@@ -413,6 +422,15 @@ pub mod pallet {
 					let public_key = ecdsa::Public::try_from(public_key_bytes)
 						.map_err(|_| Error::<T>::InvalidPublicKey)?;
 					ecdsa_verify(&signature, payload, &public_key)
+				},
+				#[cfg(feature = "bls")]
+				CredentialType::Bls => {
+					let signature = blst::min_pk::Signature::deserialize(signature_bytes)
+						.map_err(|_| Error::<T>::InvalidSignature)?;
+					let public_key = blst::min_pk::PublicKey::deserialize(public_key_bytes)
+						.map_err(|_| Error::<T>::InvalidPublicKey)?;
+					let err = signature.verify(true, payload, &[], &[], &public_key, true);
+					err == blst::BLST_ERROR::BLST_SUCCESS
 				},
 			};
 			ensure!(verified, Error::<T>::InvalidSignature);

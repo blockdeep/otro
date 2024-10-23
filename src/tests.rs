@@ -322,7 +322,7 @@ fn check_abstract_signature_sr25519() {
 			Some(CredentialConfig { cred_type: CredentialType::Sr25519 })
 		);
 
-		let payload = [0u8; 32];
+		let payload = *b"SR25519 signature should work";
 		let signature = sr25519_sign(0.into(), &public, &payload).unwrap();
 		AccountAbstraction::check_abstract_signature(
 			&owner,
@@ -355,8 +355,8 @@ fn check_abstract_signature_ed25519() {
 			Some(CredentialConfig { cred_type: CredentialType::Ed25519 })
 		);
 
-		let payload = [0u8; 32];
-		let signature = ed25519_sign(0.into(), &public, &payload).unwrap();
+		let payload = b"ED25519 signature should work";
+		let signature = ed25519_sign(0.into(), &public, payload.as_slice()).unwrap();
 		AccountAbstraction::check_abstract_signature(
 			&owner,
 			public_key_bytes.as_slice(),
@@ -365,4 +365,112 @@ fn check_abstract_signature_ed25519() {
 		)
 		.expect("ED25519 abstract signature should be valid");
 	});
+}
+
+#[cfg(feature = "bls")]
+mod bls {
+	use super::*;
+
+	#[test]
+	fn check_abstract_signature_bls() {
+		new_test_ext().execute_with(|| {
+			initialize_to_block(1);
+			let owner = acc(1);
+			let seed = [5u8; 32];
+			let private = blst::min_pk::SecretKey::key_gen(&seed, &[])
+				.expect("BLS private key creation from seed should work");
+			let public = private.sk_to_pk();
+			let public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
+				public.serialize().as_slice().to_vec().try_into().unwrap();
+			AccountAbstraction::register_credentials(
+				RuntimeOrigin::signed(owner.clone()),
+				vec![(
+					public_key_bytes.clone(),
+					CredentialConfig { cred_type: CredentialType::Bls },
+				)],
+			)
+			.expect("BLS public key registration should be valid");
+			assert_eq!(
+				Credentials::<Test>::get(owner.clone(), public_key_bytes.clone()),
+				Some(CredentialConfig { cred_type: CredentialType::Bls })
+			);
+
+			let payload = b"BLS signature should work";
+			let signature = private.sign(payload.as_slice(), &[], &[]);
+			AccountAbstraction::check_abstract_signature(
+				&owner,
+				public_key_bytes.as_slice(),
+				signature.to_bytes().as_slice(),
+				payload.as_slice(),
+			)
+			.expect("BLS abstract signature should be valid");
+		});
+	}
+
+	#[test]
+	fn register_credential_bls() {
+		new_test_ext().execute_with(|| {
+			initialize_to_block(1);
+			let owner = acc(1);
+			let invalid_public_key = blst::min_pk::SecretKey::key_gen(&[1u8; 32], &[]).unwrap();
+			let invalid_public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
+				invalid_public_key.serialize().as_slice().to_vec().try_into().unwrap();
+
+			let private = blst::min_pk::SecretKey::key_gen(&[5u8; 32], &[])
+				.expect("BLS private key creation from seed should work");
+			let public = private.sk_to_pk();
+			let public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
+				public.serialize().as_slice().to_vec().try_into().unwrap();
+			assert_eq!(Credentials::<Test>::get(owner.clone(), public_key_bytes.clone()), None);
+			assert_noop!(
+				AccountAbstraction::register_credentials(
+					RuntimeOrigin::signed(owner.clone()),
+					vec![(
+						public_key_bytes.clone(),
+						CredentialConfig { cred_type: CredentialType::Sr25519 },
+					)],
+				),
+				Error::<Test>::InvalidPublicKeyLength
+			);
+			assert_noop!(
+				AccountAbstraction::register_credentials(
+					RuntimeOrigin::signed(owner.clone()),
+					vec![(
+						public_key_bytes.clone(),
+						CredentialConfig { cred_type: CredentialType::Ed25519 },
+					)],
+				),
+				Error::<Test>::InvalidPublicKeyLength
+			);
+			assert_noop!(
+				AccountAbstraction::register_credentials(
+					RuntimeOrigin::signed(owner.clone()),
+					vec![(
+						invalid_public_key_bytes.clone(),
+						CredentialConfig { cred_type: CredentialType::Ecdsa },
+					)],
+				),
+				Error::<Test>::InvalidPublicKeyLength
+			);
+			AccountAbstraction::register_credentials(
+				RuntimeOrigin::signed(owner.clone()),
+				vec![(
+					public_key_bytes.clone(),
+					CredentialConfig { cred_type: CredentialType::Bls },
+				)],
+			)
+			.expect("BLS credential should be successfully registered");
+			assert_eq!(
+				Credentials::<Test>::get(owner.clone(), public_key_bytes.clone()),
+				Some(CredentialConfig { cred_type: CredentialType::Bls })
+			);
+			System::assert_last_event(RuntimeEvent::AccountAbstraction(
+				Event::CredentialRegistered {
+					account: owner.clone(),
+					public_key: public_key_bytes,
+					config: CredentialConfig { cred_type: CredentialType::Bls },
+				},
+			));
+		});
+	}
 }
