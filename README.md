@@ -19,6 +19,7 @@ Currently, the pallet supports the following signature schemas:
 - **SR25519**
 - **ED25519**
 - **ECDSA**
+- **Ethereum**
 - **BLS** only if the `bls` feature is enabled.
 
 Bear in mind that in all cases the payload is expected to be hashed with the `blake2_256` algorithm.
