@@ -40,7 +40,7 @@ mod benchmarks {
 			AccountSmartion::<T>::generate_account_from_entropy(&caller).unwrap();
 
 		assert_has_event::<T>(
-			Event::<T>::AccountGenerated { generator: caller, account: generated_account.clone() }
+			Event::<T>::SmartAccountGenerated { generator: caller, account: generated_account.clone() }
 				.into(),
 		);
 		for credential in credentials {

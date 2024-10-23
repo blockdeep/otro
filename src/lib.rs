@@ -161,7 +161,7 @@ pub mod pallet {
 	#[pallet::error]
 	pub enum Error<T> {
 		/// An error occurred while generating a smart account.
-		AccountGenerationError,
+		SmartAccountGenerationError,
 		/// Supplied credentials not found.
 		CredentialDoesNotExist,
 		/// Public key length does not match the expected one.
@@ -178,7 +178,7 @@ pub mod pallet {
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		/// A new smart account was generated.
-		AccountGenerated { account: T::AccountId, generator: T::AccountId },
+		SmartAccountGenerated { account: T::AccountId, generator: T::AccountId },
 		/// A new credential was registered.
 		CredentialRegistered {
 			account: T::AccountId,
@@ -224,7 +224,7 @@ pub mod pallet {
 			ensure!(!credentials.len().is_zero(), Error::<T>::TooFewCredentials);
 
 			let new_account = Self::generate_account_from_entropy(&who)?;
-			Self::deposit_event(Event::AccountGenerated {
+			Self::deposit_event(Event::SmartAccountGenerated {
 				account: new_account.clone(),
 				generator: who.clone(),
 			});
@@ -334,7 +334,7 @@ pub mod pallet {
 			}
 			let generated_acc = T::AccountId::decode(&mut &acc_bytes[..])
 				// Still, raise an error if something goes wrong.
-				.map_err(|_| Error::<T>::AccountGenerationError)?;
+				.map_err(|_| Error::<T>::SmartAccountGenerationError)?;
 			Ok(generated_acc)
 		}
 
