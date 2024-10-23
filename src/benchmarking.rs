@@ -1,8 +1,8 @@
-//! Benchmarking setup for pallet-account-abstraction.
+//! Benchmarking setup for pallet-smart-accounts.
 
 use super::*;
 
-use crate::Pallet as AccountAbstraction;
+use crate::Pallet as AccountSmartion;
 use frame_benchmarking::{v2::*, whitelisted_caller};
 
 fn assert_has_event<T: Config>(generic_event: <T as Config>::RuntimeEvent) {
@@ -37,7 +37,7 @@ mod benchmarks {
 		_(RawOrigin::Signed(caller.clone()), credentials.clone());
 
 		let generated_account =
-			AccountAbstraction::<T>::generate_account_from_entropy(&caller).unwrap();
+			AccountSmartion::<T>::generate_account_from_entropy(&caller).unwrap();
 
 		assert_has_event::<T>(
 			Event::<T>::AccountGenerated { generator: caller, account: generated_account.clone() }
@@ -100,7 +100,7 @@ mod benchmarks {
 		let credential =
 			(public_key_bytes.clone(), CredentialConfig { cred_type: CredentialType::Ecdsa });
 		credentials.push(credential);
-		AccountAbstraction::<T>::register_credentials(
+		AccountSmartion::<T>::register_credentials(
 			RawOrigin::Signed(caller.clone()).into(),
 			credentials.clone(),
 		)
@@ -119,5 +119,5 @@ mod benchmarks {
 		assert_eq!(Credentials::<T>::get(caller.clone(), public_key_bytes), None);
 	}
 
-	impl_benchmark_test_suite!(AccountAbstraction, crate::mock::new_test_ext(), crate::mock::Test);
+	impl_benchmark_test_suite!(AccountSmartion, crate::mock::new_test_ext(), crate::mock::Test);
 }

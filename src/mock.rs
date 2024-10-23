@@ -7,7 +7,7 @@ use sp_runtime::traits::IdentityLookup;
 use sp_runtime::{traits::Verify, BuildStorage, MultiSignature};
 use sp_std::sync::Arc;
 
-use crate as pallet_account_abstraction;
+use crate as pallet_smart_accounts;
 
 use super::*;
 
@@ -20,7 +20,7 @@ frame_support::construct_runtime!(
 	pub enum Test
 	{
 		System: frame_system,
-		AccountAbstraction: pallet_account_abstraction,
+		AccountSmartion: pallet_smart_accounts,
 	}
 );
 

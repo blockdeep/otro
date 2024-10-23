@@ -1,5 +1,5 @@
 [package]
-name = "pallet-account-abstraction"
+name = "pallet-smart-accounts"
 version = "0.0.1"
 description = "Pallet to provide smart accounts"
 authors = ["José Molina <jose.molina@blockdeep.io>"]

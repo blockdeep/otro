@@ -1,22 +1,22 @@
-//! # Account Abstraction Pallet
+//! # Account Smartion Pallet
 //!
-//! The Account Abstraction Pallet provides mechanisms for handling native and abstract signature verification, allowing for more flexible account management. This pallet introduces support for various signature types and credential management, enhancing security and enabling multi-signature scenarios.
+//! The Account Smartion Pallet provides mechanisms for handling native and smart signature verification, allowing for more flexible account management. This pallet introduces support for various signature types and credential management, enhancing security and enabling multi-signature scenarios.
 //!
 //! ## Overview
 //!
-//! The pallet allows accounts to use both native signatures (e.g., Ed25519, Sr25519, ECDSA, Ethereum) and abstract signatures. Abstract signatures can involve custom signature methods, enabling enhanced account management scenarios, such as integration with custom wallets or smart contract-based accounts.
+//! The pallet allows accounts to use both native signatures (e.g., Ed25519, Sr25519, ECDSA, Ethereum) and smart signatures. Smart signatures can involve custom signature methods, enabling enhanced account management scenarios, such as integration with custom wallets or smart contract-based accounts.
 //!
 //! Key functionalities provided by this pallet include:
-//! - Generation of abstract accounts from native accounts.
+//! - Generation of smart accounts from native accounts.
 //! - Registration and management of credentials for accounts.
-//! - Verification of transactions signed with either native or abstract signatures.
+//! - Verification of transactions signed with either native or smart signatures.
 //!
 //! ## Key Concepts
 //!
-//! ### Native and Abstract Signatures
+//! ### Native and Smart Signatures
 //!
 //! - **Native Signature:** A traditional cryptographic signature using common algorithms like Ed25519, Sr25519, ECDSA and Ethereum.
-//! - **Abstract Signature:** A signature that includes additional custom logic or cryptographic methods.
+//! - **Smart Signature:** A signature that includes additional custom logic or cryptographic methods.
 //!   It consists of a public key and the actual signature, supporting various custom signature types.
 //!
 //! ### Credential Management
@@ -31,31 +31,31 @@
 //!
 //! ## Integration
 //!
-//! To integrate the `Account Abstraction` pallet with your runtime, you need to redefine the signature type used in your blockchain.
-//! Replace the default Substrate signature with `NativeOrAbstractSignature` to enable compatibility with both native and abstract signatures.
+//! To integrate the `Smart Accounts` pallet with your runtime, you need to redefine the signature type used in your blockchain.
+//! Replace the default Substrate signature with `NativeOrSmartSignature` to enable compatibility with both native and smart signatures.
 //! Modify your runtime as follows:
 //!
 //! ```rust
 //! use sp_runtime::MultiSignature;
 //! use sp_runtime::traits::{IdentifyAccount, Verify};
-//! use pallet_account_abstraction::{AbstractCredentialProvider, NativeOrAbstractSignature};
+//! use pallet_smart_accounts::{SmartCredentialsProvider, NativeOrSmartSignature};
 //!
 //! pub struct Runtime;  // your defined runtime
 //!
 //! pub type NativeSignature = MultiSignature;  // or any other native signature type
 //! pub type AccountId = <<NativeSignature as Verify>::Signer as IdentifyAccount>::AccountId;
 //!
-//! pub type Signature = NativeOrAbstractSignature<
-//!     AbstractCredentialProvider<Runtime>,
+//! pub type Signature = NativeOrSmartSignature<
+//!     SmartCredentialsProvider<Runtime>,
 //!     NativeSignature,
 //! >;
 //! ```
 //!
-//! You will also have to add the `pallet_account_abstraction` to your runtime.
+//! You will also have to add the `pallet_smart_accounts` to your runtime.
 //!
 //! ## Security Considerations
 //!
-//! - **Signature Verification:** Both native and abstract signatures undergo strict verification to ensure their validity. This protects against unauthorized transactions.
+//! - **Signature Verification:** Both native and smart signatures undergo strict verification to ensure their validity. This protects against unauthorized transactions.
 //! - **Access Control:** Only authorized public keys, as defined in the credential configuration, can interact with an account. This ensures that account operations remain secure.
 //! - **Replay Protection:** Using nonces or similar mechanisms prevents replay attacks, ensuring each transaction is unique and cannot be reused maliciously.
 //!
@@ -63,8 +63,8 @@
 //!
 //! Future versions of the pallet could support:
 //! - More complex credential types, such as biometric authentication or hardware key integration.
-//! - Enhanced user interfaces for managing credentials and abstract accounts.
-//! - Smart contract-based accounts that leverage abstract signatures for more sophisticated transaction logic.
+//! - Enhanced user interfaces for managing credentials and smart accounts.
+//! - Smart contract-based accounts that leverage smart signatures for more sophisticated transaction logic.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
@@ -135,9 +135,10 @@ pub mod pallet {
 
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
+		/// The aggregated event type of the runtime.
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
-		/// Bytes to be included as entropy when generating abstract accounts.
+		/// Bytes to be included as entropy when generating smart accounts.
 		#[pallet::constant]
 		type SignaturePrelude: Get<[u8; 8]>;
 
@@ -150,7 +151,7 @@ pub mod pallet {
 	pub type Credentials<T: Config> = StorageDoubleMap<
 		_,
 		Blake2_128Concat,
-		T::AccountId, // abstract account
+		T::AccountId, // smart account
 		Blake2_128Concat,
 		BoundedVec<u8, MaxPublicKeySize>, // public key that is allowed to access the account
 		CredentialConfig,
@@ -159,7 +160,7 @@ pub mod pallet {
 
 	#[pallet::error]
 	pub enum Error<T> {
-		/// An error occurred while generating an abstract account.
+		/// An error occurred while generating a smart account.
 		AccountGenerationError,
 		/// Supplied credentials not found.
 		CredentialDoesNotExist,
@@ -176,7 +177,7 @@ pub mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		/// A new abstract account was generated.
+		/// A new smart account was generated.
 		AccountGenerated { account: T::AccountId, generator: T::AccountId },
 		/// A new credential was registered.
 		CredentialRegistered {
@@ -195,7 +196,7 @@ pub mod pallet {
 	impl<T: Config> Pallet<T> {
 		/// Generates a new account and registers a set of credentials for it.
 		///
-		/// This function is called by an existing account to create a new abstract account
+		/// This function is called by an existing account to create a new smart account
 		/// derived from its own entropy. The newly generated account is linked with the
 		/// provided credentials, which define public keys and their associated configuration.
 		///
@@ -393,7 +394,7 @@ pub mod pallet {
 			Ok(())
 		}
 
-		pub(crate) fn check_abstract_signature(
+		pub(crate) fn check_smart_signature(
 			account: &T::AccountId,
 			public_key_bytes: &[u8],
 			signature_bytes: &[u8],

@@ -45,13 +45,13 @@ fn generate_account() {
 		// make sure the generated account is not the generator.
 		set.insert(generator.clone());
 		// first one, generic.
-		let acc1 = AccountAbstraction::generate_account_from_entropy(&generator).unwrap();
+		let acc1 = AccountSmartion::generate_account_from_entropy(&generator).unwrap();
 		set.insert(acc1.clone());
 		// should generate the same
-		set.insert(AccountAbstraction::generate_account_from_entropy(&generator).unwrap());
+		set.insert(AccountSmartion::generate_account_from_entropy(&generator).unwrap());
 		// second one, same block, increasing nonce.
 		System::inc_account_nonce(generator.clone());
-		let acc2 = AccountAbstraction::generate_account_from_entropy(&generator).unwrap();
+		let acc2 = AccountSmartion::generate_account_from_entropy(&generator).unwrap();
 		set.insert(acc2.clone());
 		assert_eq!(set.len(), 3);
 	})
@@ -71,7 +71,7 @@ fn register_credential_ecdsa() {
 			public.encode().try_into().unwrap();
 		assert_eq!(Credentials::<Test>::get(owner.clone(), public_key_bytes.clone()), None);
 		assert_noop!(
-			AccountAbstraction::register_credentials(
+			AccountSmartion::register_credentials(
 				RuntimeOrigin::signed(owner.clone()),
 				vec![(
 					public_key_bytes.clone(),
@@ -81,7 +81,7 @@ fn register_credential_ecdsa() {
 			Error::<Test>::InvalidPublicKeyLength
 		);
 		assert_noop!(
-			AccountAbstraction::register_credentials(
+			AccountSmartion::register_credentials(
 				RuntimeOrigin::signed(owner.clone()),
 				vec![(
 					public_key_bytes.clone(),
@@ -91,7 +91,7 @@ fn register_credential_ecdsa() {
 			Error::<Test>::InvalidPublicKeyLength
 		);
 		assert_noop!(
-			AccountAbstraction::register_credentials(
+			AccountSmartion::register_credentials(
 				RuntimeOrigin::signed(owner.clone()),
 				vec![(
 					invalid_public_key_bytes.clone(),
@@ -102,7 +102,7 @@ fn register_credential_ecdsa() {
 		);
 		let long_public_key = [0u8; 128].to_vec().try_into().unwrap();
 		assert_noop!(
-			AccountAbstraction::register_credentials(
+			AccountSmartion::register_credentials(
 				RuntimeOrigin::signed(owner.clone()),
 				vec![(long_public_key, CredentialConfig { cred_type: CredentialType::Ecdsa },)],
 			),
@@ -110,13 +110,13 @@ fn register_credential_ecdsa() {
 		);
 		let zero_public_key = [0u8; 33].to_vec().try_into().unwrap();
 		assert_noop!(
-			AccountAbstraction::register_credentials(
+			AccountSmartion::register_credentials(
 				RuntimeOrigin::signed(owner.clone()),
 				vec![(zero_public_key, CredentialConfig { cred_type: CredentialType::Ecdsa },)],
 			),
 			Error::<Test>::InvalidPublicKey
 		);
-		AccountAbstraction::register_credentials(
+		AccountSmartion::register_credentials(
 			RuntimeOrigin::signed(owner.clone()),
 			vec![(public_key_bytes.clone(), CredentialConfig { cred_type: CredentialType::Ecdsa })],
 		)
@@ -125,7 +125,7 @@ fn register_credential_ecdsa() {
 			Credentials::<Test>::get(owner.clone(), public_key_bytes.clone()),
 			Some(CredentialConfig { cred_type: CredentialType::Ecdsa })
 		);
-		System::assert_last_event(RuntimeEvent::AccountAbstraction(Event::CredentialRegistered {
+		System::assert_last_event(RuntimeEvent::AccountSmartion(Event::CredentialRegistered {
 			account: owner.clone(),
 			public_key: public_key_bytes,
 			config: CredentialConfig { cred_type: CredentialType::Ecdsa },
@@ -147,7 +147,7 @@ fn register_credential_sr25519() {
 			public.encode().try_into().unwrap();
 		assert_eq!(Credentials::<Test>::get(owner.clone(), public_key_bytes.clone()), None);
 		assert_noop!(
-			AccountAbstraction::register_credentials(
+			AccountSmartion::register_credentials(
 				RuntimeOrigin::signed(owner.clone()),
 				vec![(
 					public_key_bytes.clone(),
@@ -158,7 +158,7 @@ fn register_credential_sr25519() {
 		);
 		// here we cannot test against ED25519, as both SR25519 and ED25519 bytes can be valid.
 		assert_noop!(
-			AccountAbstraction::register_credentials(
+			AccountSmartion::register_credentials(
 				RuntimeOrigin::signed(owner.clone()),
 				vec![(
 					invalid_public_key_bytes.clone(),
@@ -169,7 +169,7 @@ fn register_credential_sr25519() {
 		);
 		let long_public_key = [0u8; 128].to_vec().try_into().unwrap();
 		assert_noop!(
-			AccountAbstraction::register_credentials(
+			AccountSmartion::register_credentials(
 				RuntimeOrigin::signed(owner.clone()),
 				vec![(long_public_key, CredentialConfig { cred_type: CredentialType::Sr25519 },)],
 			),
@@ -177,13 +177,13 @@ fn register_credential_sr25519() {
 		);
 		let zero_public_key = [0u8; 33].to_vec().try_into().unwrap();
 		assert_noop!(
-			AccountAbstraction::register_credentials(
+			AccountSmartion::register_credentials(
 				RuntimeOrigin::signed(owner.clone()),
 				vec![(zero_public_key, CredentialConfig { cred_type: CredentialType::Sr25519 },)],
 			),
 			Error::<Test>::InvalidPublicKeyLength
 		);
-		AccountAbstraction::register_credentials(
+		AccountSmartion::register_credentials(
 			RuntimeOrigin::signed(owner.clone()),
 			vec![(
 				public_key_bytes.clone(),
@@ -195,7 +195,7 @@ fn register_credential_sr25519() {
 			Credentials::<Test>::get(owner.clone(), public_key_bytes.clone()),
 			Some(CredentialConfig { cred_type: CredentialType::Sr25519 })
 		);
-		System::assert_last_event(RuntimeEvent::AccountAbstraction(Event::CredentialRegistered {
+		System::assert_last_event(RuntimeEvent::AccountSmartion(Event::CredentialRegistered {
 			account: owner.clone(),
 			public_key: public_key_bytes,
 			config: CredentialConfig { cred_type: CredentialType::Sr25519 },
@@ -217,7 +217,7 @@ fn register_credential_ed25519() {
 			public.encode().try_into().unwrap();
 		assert_eq!(Credentials::<Test>::get(owner.clone(), public_key_bytes.clone()), None);
 		assert_noop!(
-			AccountAbstraction::register_credentials(
+			AccountSmartion::register_credentials(
 				RuntimeOrigin::signed(owner.clone()),
 				vec![(
 					public_key_bytes.clone(),
@@ -228,7 +228,7 @@ fn register_credential_ed25519() {
 		);
 		// here we cannot test against ED25519, as both SR25519 and ED25519 bytes can be valid.
 		assert_noop!(
-			AccountAbstraction::register_credentials(
+			AccountSmartion::register_credentials(
 				RuntimeOrigin::signed(owner.clone()),
 				vec![(
 					invalid_public_key_bytes.clone(),
@@ -239,7 +239,7 @@ fn register_credential_ed25519() {
 		);
 		let long_public_key = [0u8; 128].to_vec().try_into().unwrap();
 		assert_noop!(
-			AccountAbstraction::register_credentials(
+			AccountSmartion::register_credentials(
 				RuntimeOrigin::signed(owner.clone()),
 				vec![(long_public_key, CredentialConfig { cred_type: CredentialType::Ed25519 },)]
 			),
@@ -247,13 +247,13 @@ fn register_credential_ed25519() {
 		);
 		let zero_public_key = [0u8; 33].to_vec().try_into().unwrap();
 		assert_noop!(
-			AccountAbstraction::register_credentials(
+			AccountSmartion::register_credentials(
 				RuntimeOrigin::signed(owner.clone()),
 				vec![(zero_public_key, CredentialConfig { cred_type: CredentialType::Ed25519 },)],
 			),
 			Error::<Test>::InvalidPublicKeyLength
 		);
-		AccountAbstraction::register_credentials(
+		AccountSmartion::register_credentials(
 			RuntimeOrigin::signed(owner.clone()),
 			vec![(
 				public_key_bytes.clone(),
@@ -265,7 +265,7 @@ fn register_credential_ed25519() {
 			Credentials::<Test>::get(owner.clone(), public_key_bytes.clone()),
 			Some(CredentialConfig { cred_type: CredentialType::Ed25519 })
 		);
-		System::assert_last_event(RuntimeEvent::AccountAbstraction(Event::CredentialRegistered {
+		System::assert_last_event(RuntimeEvent::AccountSmartion(Event::CredentialRegistered {
 			account: owner.clone(),
 			public_key: public_key_bytes,
 			config: CredentialConfig { cred_type: CredentialType::Ed25519 },
@@ -274,14 +274,14 @@ fn register_credential_ed25519() {
 }
 
 #[test]
-fn check_abstract_signature_ecdsa() {
+fn check_smart_signature_ecdsa() {
 	new_test_ext().execute_with(|| {
 		initialize_to_block(1);
 		let owner = acc(1);
 		let public: ecdsa::Public = ecdsa_generate(0.into(), None);
 		let public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
 			public.encode().try_into().unwrap();
-		AccountAbstraction::register_credentials(
+		AccountSmartion::register_credentials(
 			RuntimeOrigin::signed(owner.clone()),
 			vec![(public_key_bytes.clone(), CredentialConfig { cred_type: CredentialType::Ecdsa })],
 		)
@@ -293,25 +293,25 @@ fn check_abstract_signature_ecdsa() {
 
 		let payload = *b"ECDSA signature should work";
 		let signature = ecdsa_sign(0.into(), &public, &payload).unwrap();
-		AccountAbstraction::check_abstract_signature(
+		AccountSmartion::check_smart_signature(
 			&owner,
 			public_key_bytes.as_slice(),
 			signature.as_slice(),
 			payload.as_slice(),
 		)
-		.expect("ECDSA abstract signature should be valid");
+		.expect("ECDSA smart signature should be valid");
 	});
 }
 
 #[test]
-fn check_abstract_signature_ethereum() {
+fn check_smart_signature_ethereum() {
 	new_test_ext().execute_with(|| {
 		initialize_to_block(1);
 		let owner = acc(1);
 		let public: ecdsa::Public = ecdsa_generate(0.into(), None);
 		let public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
 			public.encode().try_into().unwrap();
-		AccountAbstraction::register_credentials(
+		AccountSmartion::register_credentials(
 			RuntimeOrigin::signed(owner.clone()),
 			vec![(
 				public_key_bytes.clone(),
@@ -328,25 +328,25 @@ fn check_abstract_signature_ethereum() {
 		let mut hash = [0u8; 32];
 		hash.copy_from_slice(Keccak256::digest(payload).as_slice());
 		let signature = ecdsa_sign_prehashed(0.into(), &public, &hash).unwrap();
-		AccountAbstraction::check_abstract_signature(
+		AccountSmartion::check_smart_signature(
 			&owner,
 			public_key_bytes.as_slice(),
 			signature.as_slice(),
 			payload.as_slice(),
 		)
-		.expect("Ethereum abstract signature should be valid");
+		.expect("Ethereum smart signature should be valid");
 	});
 }
 
 #[test]
-fn check_abstract_signature_sr25519() {
+fn check_smart_signature_sr25519() {
 	new_test_ext().execute_with(|| {
 		initialize_to_block(1);
 		let owner = acc(1);
 		let public: sr25519::Public = sr25519_generate(0.into(), None);
 		let public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
 			public.encode().try_into().unwrap();
-		AccountAbstraction::register_credentials(
+		AccountSmartion::register_credentials(
 			RuntimeOrigin::signed(owner.clone()),
 			vec![(
 				public_key_bytes.clone(),
@@ -361,25 +361,25 @@ fn check_abstract_signature_sr25519() {
 
 		let payload = *b"SR25519 signature should work";
 		let signature = sr25519_sign(0.into(), &public, &payload).unwrap();
-		AccountAbstraction::check_abstract_signature(
+		AccountSmartion::check_smart_signature(
 			&owner,
 			public_key_bytes.as_slice(),
 			signature.as_slice(),
 			payload.as_slice(),
 		)
-		.expect("SR25519 abstract signature should be valid");
+		.expect("SR25519 smart signature should be valid");
 	});
 }
 
 #[test]
-fn check_abstract_signature_ed25519() {
+fn check_smart_signature_ed25519() {
 	new_test_ext().execute_with(|| {
 		initialize_to_block(1);
 		let owner = acc(1);
 		let public: ed25519::Public = ed25519_generate(0.into(), None);
 		let public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
 			public.encode().try_into().unwrap();
-		AccountAbstraction::register_credentials(
+		AccountSmartion::register_credentials(
 			RuntimeOrigin::signed(owner.clone()),
 			vec![(
 				public_key_bytes.clone(),
@@ -394,13 +394,13 @@ fn check_abstract_signature_ed25519() {
 
 		let payload = b"ED25519 signature should work";
 		let signature = ed25519_sign(0.into(), &public, payload.as_slice()).unwrap();
-		AccountAbstraction::check_abstract_signature(
+		AccountSmartion::check_smart_signature(
 			&owner,
 			public_key_bytes.as_slice(),
 			signature.as_slice(),
 			payload.as_slice(),
 		)
-		.expect("ED25519 abstract signature should be valid");
+		.expect("ED25519 smart signature should be valid");
 	});
 }
 
@@ -409,7 +409,7 @@ mod bls {
 	use super::*;
 
 	#[test]
-	fn check_abstract_signature_bls() {
+	fn check_smart_signature_bls() {
 		new_test_ext().execute_with(|| {
 			initialize_to_block(1);
 			let owner = acc(1);
@@ -419,7 +419,7 @@ mod bls {
 			let public = private.sk_to_pk();
 			let public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
 				public.serialize().as_slice().to_vec().try_into().unwrap();
-			AccountAbstraction::register_credentials(
+			AccountSmartion::register_credentials(
 				RuntimeOrigin::signed(owner.clone()),
 				vec![(
 					public_key_bytes.clone(),
@@ -434,13 +434,13 @@ mod bls {
 
 			let payload = b"BLS signature should work";
 			let signature = private.sign(payload.as_slice(), &[], &[]);
-			AccountAbstraction::check_abstract_signature(
+			AccountSmartion::check_smart_signature(
 				&owner,
 				public_key_bytes.as_slice(),
 				signature.to_bytes().as_slice(),
 				payload.as_slice(),
 			)
-			.expect("BLS abstract signature should be valid");
+			.expect("BLS smart signature should be valid");
 		});
 	}
 
@@ -460,7 +460,7 @@ mod bls {
 				public.serialize().as_slice().to_vec().try_into().unwrap();
 			assert_eq!(Credentials::<Test>::get(owner.clone(), public_key_bytes.clone()), None);
 			assert_noop!(
-				AccountAbstraction::register_credentials(
+				AccountSmartion::register_credentials(
 					RuntimeOrigin::signed(owner.clone()),
 					vec![(
 						public_key_bytes.clone(),
@@ -470,7 +470,7 @@ mod bls {
 				Error::<Test>::InvalidPublicKeyLength
 			);
 			assert_noop!(
-				AccountAbstraction::register_credentials(
+				AccountSmartion::register_credentials(
 					RuntimeOrigin::signed(owner.clone()),
 					vec![(
 						public_key_bytes.clone(),
@@ -480,7 +480,7 @@ mod bls {
 				Error::<Test>::InvalidPublicKeyLength
 			);
 			assert_noop!(
-				AccountAbstraction::register_credentials(
+				AccountSmartion::register_credentials(
 					RuntimeOrigin::signed(owner.clone()),
 					vec![(
 						invalid_public_key_bytes.clone(),
@@ -489,7 +489,7 @@ mod bls {
 				),
 				Error::<Test>::InvalidPublicKeyLength
 			);
-			AccountAbstraction::register_credentials(
+			AccountSmartion::register_credentials(
 				RuntimeOrigin::signed(owner.clone()),
 				vec![(
 					public_key_bytes.clone(),
@@ -501,13 +501,11 @@ mod bls {
 				Credentials::<Test>::get(owner.clone(), public_key_bytes.clone()),
 				Some(CredentialConfig { cred_type: CredentialType::Bls })
 			);
-			System::assert_last_event(RuntimeEvent::AccountAbstraction(
-				Event::CredentialRegistered {
-					account: owner.clone(),
-					public_key: public_key_bytes,
-					config: CredentialConfig { cred_type: CredentialType::Bls },
-				},
-			));
+			System::assert_last_event(RuntimeEvent::AccountSmartion(Event::CredentialRegistered {
+				account: owner.clone(),
+				public_key: public_key_bytes,
+				config: CredentialConfig { cred_type: CredentialType::Bls },
+			}));
 		});
 	}
 }

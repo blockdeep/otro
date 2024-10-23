@@ -1,17 +1,17 @@
-# Account Abstraction Pallet
+# Smart Account Pallet
 
-The Account Abstraction Pallet provides mechanisms for handling native and abstract signature verification, allowing for more flexible account management.
+The Account Smartion Pallet provides mechanisms for handling native and smart signature verification, allowing for more flexible account management.
 This pallet introduces support for various signature types and credential management, enhancing security and enabling multi-signature scenarios.
 
 ## Overview
 
-The pallet allows accounts to use both native signatures (e.g., Ed25519, Sr25519, ECDSA) and abstract signatures.
-Abstract signatures can involve custom signature methods, enabling enhanced account management scenarios, such as integration with custom wallets or smart contract-based accounts.
+The pallet allows accounts to use both native signatures (e.g., Ed25519, Sr25519, ECDSA) and smart signatures.
+Smart signatures can involve custom signature methods, enabling enhanced account management scenarios, such as integration with custom wallets or smart contract-based accounts.
 
 Key functionalities provided by this pallet include:
-- Generation of abstract accounts from native accounts.
+- Generation of smart accounts from native accounts.
 - Registration and management of credentials for accounts.
-- Verification of transactions signed with either native or abstract signatures.
+- Verification of transactions signed with either native or smart signatures.
 
 ## Supported signatures schemas
 
@@ -26,10 +26,10 @@ Bear in mind that in all cases the payload is expected to be hashed with the `bl
 
 ## Key Concepts
 
-### Native and Abstract Signatures
+### Native and Smart Signatures
 
 - **Native Signature:** A traditional cryptographic signature using common algorithms like Ed25519, Sr25519, and ECDSA.
-- **Abstract Signature:** A signature that includes additional custom logic or cryptographic methods. It consists of a public key and the actual signature, supporting various custom signature types.
+- **Smart Signature:** A signature that includes additional custom logic or cryptographic methods. It consists of a public key and the actual signature, supporting various custom signature types.
 
 ### Credential Management
 
@@ -43,27 +43,27 @@ Each credential consists of a public key and a configuration detailing the allow
 
 ## Integration
 
-To integrate the `Account Abstraction` pallet with your runtime, you need to redefine the signature type used in your blockchain.
-Replace the default Substrate signature with `NativeOrAbstractSignature` to enable compatibility with both native and abstract signatures.
+To integrate the `Account Smartion` pallet with your runtime, you need to redefine the signature type used in your blockchain.
+Replace the default Substrate signature with `NativeOrSmartSignature` to enable compatibility with both native and smart signatures.
 Modify your runtime as follows:
 
 ```rust
 use sp_runtime::MultiSignature;
 use sp_runtime::traits::{IdentifyAccount, Verify};
-use pallet_account_abstraction::{AbstractCredentialProvider, NativeOrAbstractSignature};
+use pallet_smart_accounts::{SmartCredentialsProvider, NativeOrSmartSignature};
 
 pub struct Runtime;  // your defined runtime
 
 pub type NativeSignature = MultiSignature;  // or any other native signature type
 pub type AccountId = <<NativeSignature as Verify>::Signer as IdentifyAccount>::AccountId;
 
-pub type Signature = NativeOrAbstractSignature<
-    AbstractCredentialProvider<Runtime>,
+pub type Signature = NativeOrSmartSignature<
+    SmartCredentialsProvider<Runtime>,
     NativeSignature,
 >;
 ```
 
-You will also have to add the `pallet_account_abstraction` to your runtime.
+You will also have to add the `pallet_smart_accounts` to your runtime.
 
 ### Regarding MacOS users
 
@@ -82,7 +82,7 @@ echo 'export PATH="/opt/homebrew/opt/llvm/bin:$PATH"' >> ~/.zshrc
 
 ## Security Considerations
 
-- **Signature Verification:** Both native and abstract signatures undergo strict verification to ensure their validity. This protects against unauthorized transactions.
+- **Signature Verification:** Both native and smart signatures undergo strict verification to ensure their validity. This protects against unauthorized transactions.
 - **Access Control:** Only authorized public keys, as defined in the credential configuration, can interact with an account. This ensures that account operations remain secure.
 - **Replay Protection:** Using nonces or similar mechanisms prevents replay attacks, ensuring each transaction is unique and cannot be reused maliciously.
 
@@ -90,5 +90,5 @@ echo 'export PATH="/opt/homebrew/opt/llvm/bin:$PATH"' >> ~/.zshrc
 
 Future versions of the pallet could support:
 - More complex credential types, such as biometric authentication or hardware key integration.
-- Enhanced user interfaces for managing credentials and abstract accounts.
-- Smart contract-based accounts that leverage abstract signatures for more sophisticated transaction logic.
+- Enhanced user interfaces for managing credentials and smart accounts.
+- Smart contract-based accounts that leverage smart signatures for more sophisticated transaction logic.
