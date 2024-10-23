@@ -4,7 +4,7 @@
 //!
 //! ## Overview
 //!
-//! The pallet allows accounts to use both native signatures (e.g., Ed25519, Sr25519, ECDSA) and abstract signatures. Abstract signatures can involve custom signature methods, enabling enhanced account management scenarios, such as integration with custom wallets or smart contract-based accounts.
+//! The pallet allows accounts to use both native signatures (e.g., Ed25519, Sr25519, ECDSA, Ethereum) and abstract signatures. Abstract signatures can involve custom signature methods, enabling enhanced account management scenarios, such as integration with custom wallets or smart contract-based accounts.
 //!
 //! Key functionalities provided by this pallet include:
 //! - Generation of abstract accounts from native accounts.
@@ -15,7 +15,7 @@
 //!
 //! ### Native and Abstract Signatures
 //!
-//! - **Native Signature:** A traditional cryptographic signature using common algorithms like Ed25519, Sr25519, and ECDSA.
+//! - **Native Signature:** A traditional cryptographic signature using common algorithms like Ed25519, Sr25519, ECDSA and Ethereum.
 //! - **Abstract Signature:** A signature that includes additional custom logic or cryptographic methods.
 //!   It consists of a public key and the actual signature, supporting various custom signature types.
 //!
@@ -89,8 +89,9 @@ pub mod pallet {
 	use frame_support::sp_runtime::traits::Zero;
 	use frame_system::pallet_prelude::*;
 	use parity_scale_codec::Encode;
+	use sha3::{Digest, Keccak256};
 	use sp_core::{ecdsa, ed25519, sr25519, ByteArray};
-	use sp_io::crypto::{ecdsa_verify, ed25519_verify, sr25519_verify};
+	use sp_io::crypto::{ecdsa_verify, ecdsa_verify_prehashed, ed25519_verify, sr25519_verify};
 	use sp_io::hashing::blake2_256;
 	use sp_runtime::traits::BlockNumberProvider;
 	use sp_std::vec::Vec;
@@ -106,6 +107,8 @@ pub mod pallet {
 		Sr25519,
 		/// An ECDSA signature.
 		Ecdsa,
+		/// An Ethereum signature.
+		Ethereum,
 		#[cfg(feature = "bls")]
 		/// A BLS signature.
 		Bls,
@@ -362,7 +365,7 @@ pub mod pallet {
 						.map_err(|_| Error::<T>::InvalidPublicKey)?
 						.to_vec()
 				},
-				CredentialType::Ecdsa => {
+				CredentialType::Ecdsa | CredentialType::Ethereum => {
 					ensure!(
 						public_key.len() == ecdsa::PUBLIC_KEY_SERIALIZED_SIZE,
 						Error::<T>::InvalidPublicKeyLength
@@ -422,6 +425,16 @@ pub mod pallet {
 					let public_key = ecdsa::Public::try_from(public_key_bytes)
 						.map_err(|_| Error::<T>::InvalidPublicKey)?;
 					ecdsa_verify(&signature, payload, &public_key)
+				},
+				CredentialType::Ethereum => {
+					let signature = ecdsa::Signature::try_from(signature_bytes)
+						.map_err(|_| Error::<T>::InvalidSignature)?;
+					let public_key = ecdsa::Public::try_from(public_key_bytes)
+						.map_err(|_| Error::<T>::InvalidPublicKey)?;
+					// Use the keccak256 hashing algorithm here and then verify with plain ECDSA.
+					let mut hash = [0u8; 32];
+					hash.copy_from_slice(Keccak256::digest(payload).as_slice());
+					ecdsa_verify_prehashed(&signature, &hash, &public_key)
 				},
 				#[cfg(feature = "bls")]
 				CredentialType::Bls => {

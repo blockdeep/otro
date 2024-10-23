@@ -1,9 +1,11 @@
 use frame_support::{assert_noop, BoundedVec};
 use hex_literal::hex;
 use parity_scale_codec::Encode;
+use sha3::{Digest, Keccak256};
 use sp_core::{ecdsa, ed25519, sr25519, ByteArray};
 use sp_io::crypto::{
-	ecdsa_generate, ecdsa_sign, ed25519_generate, ed25519_sign, sr25519_generate, sr25519_sign,
+	ecdsa_generate, ecdsa_sign, ecdsa_sign_prehashed, ed25519_generate, ed25519_sign,
+	sr25519_generate, sr25519_sign,
 };
 use sp_std::collections::btree_set::BTreeSet;
 
@@ -289,7 +291,7 @@ fn check_abstract_signature_ecdsa() {
 			Some(CredentialConfig { cred_type: CredentialType::Ecdsa })
 		);
 
-		let payload = [0u8; 32];
+		let payload = *b"ECDSA signature should work";
 		let signature = ecdsa_sign(0.into(), &public, &payload).unwrap();
 		AccountAbstraction::check_abstract_signature(
 			&owner,
@@ -298,6 +300,41 @@ fn check_abstract_signature_ecdsa() {
 			payload.as_slice(),
 		)
 		.expect("ECDSA abstract signature should be valid");
+	});
+}
+
+#[test]
+fn check_abstract_signature_ethereum() {
+	new_test_ext().execute_with(|| {
+		initialize_to_block(1);
+		let owner = acc(1);
+		let public: ecdsa::Public = ecdsa_generate(0.into(), None);
+		let public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
+			public.encode().try_into().unwrap();
+		AccountAbstraction::register_credentials(
+			RuntimeOrigin::signed(owner.clone()),
+			vec![(
+				public_key_bytes.clone(),
+				CredentialConfig { cred_type: CredentialType::Ethereum },
+			)],
+		)
+		.expect("Ethereum public key registration should be valid");
+		assert_eq!(
+			Credentials::<Test>::get(owner.clone(), public_key_bytes.clone()),
+			Some(CredentialConfig { cred_type: CredentialType::Ethereum })
+		);
+
+		let payload = *b"Ethereum signature should work";
+		let mut hash = [0u8; 32];
+		hash.copy_from_slice(Keccak256::digest(payload).as_slice());
+		let signature = ecdsa_sign_prehashed(0.into(), &public, &hash).unwrap();
+		AccountAbstraction::check_abstract_signature(
+			&owner,
+			public_key_bytes.as_slice(),
+			signature.as_slice(),
+			payload.as_slice(),
+		)
+		.expect("Ethereum abstract signature should be valid");
 	});
 }
 
