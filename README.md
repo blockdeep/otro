@@ -1,6 +1,6 @@
 # Smart Account Pallet
 
-The Account Smartion Pallet provides mechanisms for handling native and smart signature verification, allowing for more flexible account management.
+The Smart Accounts Pallet provides mechanisms for handling native and smart signature verification, allowing for more flexible account management.
 This pallet introduces support for various signature types and credential management, enhancing security and enabling multi-signature scenarios.
 
 ## Overview
@@ -43,7 +43,7 @@ Each credential consists of a public key and a configuration detailing the allow
 
 ## Integration
 
-To integrate the `Account Smartion` pallet with your runtime, you need to redefine the signature type used in your blockchain.
+To integrate the `Smart Accounts` pallet with your runtime, you need to redefine the signature type used in your blockchain.
 Replace the default Substrate signature with `NativeOrSmartSignature` to enable compatibility with both native and smart signatures.
 Modify your runtime as follows:
 

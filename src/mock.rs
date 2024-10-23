@@ -20,7 +20,7 @@ frame_support::construct_runtime!(
 	pub enum Test
 	{
 		System: frame_system,
-		AccountSmartion: pallet_smart_accounts,
+		SmartAccounts: pallet_smart_accounts,
 	}
 );
 

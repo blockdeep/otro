@@ -48,8 +48,8 @@ pub struct SubstrateWeight<T>(PhantomData<T>);
 	impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
 	/// Storage: `System::BlockHash` (r:2 w:0)
 	/// Proof: `System::BlockHash` (`max_values`: None, `max_size`: Some(44), added: 2519, mode: `MaxEncodedLen`)
-	/// Storage: `AccountSmartion::Credentials` (r:0 w:100)
-	/// Proof: `AccountSmartion::Credentials` (`max_values`: None, `max_size`: Some(183), added: 2658, mode: `MaxEncodedLen`)
+	/// Storage: `SmartAccounts::Credentials` (r:0 w:100)
+	/// Proof: `SmartAccounts::Credentials` (`max_values`: None, `max_size`: Some(183), added: 2658, mode: `MaxEncodedLen`)
 	/// The range of component `c` is `[1, 100]`.
 	fn generate_account(c: u32, ) -> Weight {
 		// Proof Size summary in bytes:
@@ -62,8 +62,8 @@ pub struct SubstrateWeight<T>(PhantomData<T>);
 			.saturating_add(T::DbWeight::get().reads(2_u64))
 			.saturating_add(T::DbWeight::get().writes((1_u64).saturating_mul(c.into())))
 	}
-	/// Storage: `AccountSmartion::Credentials` (r:0 w:100)
-	/// Proof: `AccountSmartion::Credentials` (`max_values`: None, `max_size`: Some(183), added: 2658, mode: `MaxEncodedLen`)
+	/// Storage: `SmartAccounts::Credentials` (r:0 w:100)
+	/// Proof: `SmartAccounts::Credentials` (`max_values`: None, `max_size`: Some(183), added: 2658, mode: `MaxEncodedLen`)
 	/// The range of component `c` is `[1, 100]`.
 	fn register_credentials(c: u32, ) -> Weight {
 		// Proof Size summary in bytes:
@@ -75,8 +75,8 @@ pub struct SubstrateWeight<T>(PhantomData<T>);
 			.saturating_add(Weight::from_parts(10_895_981, 0).saturating_mul(c.into()))
 			.saturating_add(T::DbWeight::get().writes((1_u64).saturating_mul(c.into())))
 	}
-	/// Storage: `AccountSmartion::Credentials` (r:1 w:1)
-	/// Proof: `AccountSmartion::Credentials` (`max_values`: None, `max_size`: Some(183), added: 2658, mode: `MaxEncodedLen`)
+	/// Storage: `SmartAccounts::Credentials` (r:1 w:1)
+	/// Proof: `SmartAccounts::Credentials` (`max_values`: None, `max_size`: Some(183), added: 2658, mode: `MaxEncodedLen`)
 	fn unregister_credential() -> Weight {
 		// Proof Size summary in bytes:
 		//  Measured:  `255`
@@ -92,8 +92,8 @@ pub struct SubstrateWeight<T>(PhantomData<T>);
 impl WeightInfo for () {
 	/// Storage: `System::BlockHash` (r:2 w:0)
 	/// Proof: `System::BlockHash` (`max_values`: None, `max_size`: Some(44), added: 2519, mode: `MaxEncodedLen`)
-	/// Storage: `AccountSmartion::Credentials` (r:0 w:100)
-	/// Proof: `AccountSmartion::Credentials` (`max_values`: None, `max_size`: Some(183), added: 2658, mode: `MaxEncodedLen`)
+	/// Storage: `SmartAccounts::Credentials` (r:0 w:100)
+	/// Proof: `SmartAccounts::Credentials` (`max_values`: None, `max_size`: Some(183), added: 2658, mode: `MaxEncodedLen`)
 	/// The range of component `c` is `[1, 100]`.
 	fn generate_account(c: u32, ) -> Weight {
 		// Proof Size summary in bytes:
@@ -106,8 +106,8 @@ impl WeightInfo for () {
 			.saturating_add(RocksDbWeight::get().reads(2_u64))
 			.saturating_add(RocksDbWeight::get().writes((1_u64).saturating_mul(c.into())))
 	}
-	/// Storage: `AccountSmartion::Credentials` (r:0 w:100)
-	/// Proof: `AccountSmartion::Credentials` (`max_values`: None, `max_size`: Some(183), added: 2658, mode: `MaxEncodedLen`)
+	/// Storage: `SmartAccounts::Credentials` (r:0 w:100)
+	/// Proof: `SmartAccounts::Credentials` (`max_values`: None, `max_size`: Some(183), added: 2658, mode: `MaxEncodedLen`)
 	/// The range of component `c` is `[1, 100]`.
 	fn register_credentials(c: u32, ) -> Weight {
 		// Proof Size summary in bytes:
@@ -119,8 +119,8 @@ impl WeightInfo for () {
 			.saturating_add(Weight::from_parts(10_895_981, 0).saturating_mul(c.into()))
 			.saturating_add(RocksDbWeight::get().writes((1_u64).saturating_mul(c.into())))
 	}
-	/// Storage: `AccountSmartion::Credentials` (r:1 w:1)
-	/// Proof: `AccountSmartion::Credentials` (`max_values`: None, `max_size`: Some(183), added: 2658, mode: `MaxEncodedLen`)
+	/// Storage: `SmartAccounts::Credentials` (r:1 w:1)
+	/// Proof: `SmartAccounts::Credentials` (`max_values`: None, `max_size`: Some(183), added: 2658, mode: `MaxEncodedLen`)
 	fn unregister_credential() -> Weight {
 		// Proof Size summary in bytes:
 		//  Measured:  `255`

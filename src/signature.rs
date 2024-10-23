@@ -161,7 +161,7 @@ mod tests {
 			assert!(native_signature.verify(&payload[..], &native_signer.clone().into_account()));
 
 			let caller = native_signer.clone().into_account();
-			AccountSmartion::generate_account(
+			SmartAccounts::generate_account(
 				RuntimeOrigin::signed(caller.clone()),
 				vec![(
 					public_key_bytes.clone().try_into().unwrap(),
@@ -169,7 +169,7 @@ mod tests {
 				)],
 			)
 			.unwrap();
-			let created_account = AccountSmartion::generate_account_from_entropy(&caller).unwrap();
+			let created_account = SmartAccounts::generate_account_from_entropy(&caller).unwrap();
 			let native_or_smart_signature: NativeOrSmartSignature<
 				TestCredentialProvider,
 				MultiSignature,

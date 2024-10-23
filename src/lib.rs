@@ -1,6 +1,6 @@
-//! # Account Smartion Pallet
+//! # Smart Accounts Pallet
 //!
-//! The Account Smartion Pallet provides mechanisms for handling native and smart signature verification, allowing for more flexible account management. This pallet introduces support for various signature types and credential management, enhancing security and enabling multi-signature scenarios.
+//! The Smart Accounts Pallet provides mechanisms for handling native and smart signature verification, allowing for more flexible account management. This pallet introduces support for various signature types and credential management, enhancing security and enabling multi-signature scenarios.
 //!
 //! ## Overview
 //!
