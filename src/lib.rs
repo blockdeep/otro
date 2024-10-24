@@ -136,8 +136,7 @@ pub mod pallet {
 		#[pallet::constant]
 		type SignaturePrelude: Get<[u8; 8]>;
 
-		/// The maximum length of a public key. Whenever new public key types are added
-		/// this value must be increased if needed.
+		/// The maximum length of a public key, in bytes.
 		type MaxPublicKeySize: Get<u32>;
 
 		/// Type representing the weight of this pallet.
@@ -188,6 +187,18 @@ pub mod pallet {
 			account: T::AccountId,
 			public_key: BoundedVec<u8, T::MaxPublicKeySize>,
 		},
+	}
+
+	#[pallet::hooks]
+	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
+		fn integrity_test() {
+			Self::do_try_state().expect("Failure performing the integrity test");
+		}
+
+		#[cfg(feature = "try-runtime")]
+		fn try_state(_: BlockNumberFor<T>) -> Result<(), sp_runtime::TryRuntimeError> {
+			Self::do_try_state()
+		}
 	}
 
 	#[pallet::call]
@@ -398,6 +409,11 @@ pub mod pallet {
 				public_key: truncated_public_key,
 				config,
 			});
+			Ok(())
+		}
+
+		fn do_try_state() -> Result<(), sp_runtime::TryRuntimeError> {
+			ensure!(T::MaxPublicKeySize::get() >= 128, "The minimum signature length is 128 bytes");
 			Ok(())
 		}
 
