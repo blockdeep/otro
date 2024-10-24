@@ -75,7 +75,7 @@ where
 			Self::Smart(public_key, signature, _) => Credential::is_valid(
 				public_key.as_slice(),
 				signature.as_slice(),
-				&signer,
+				signer,
 				msg.get(),
 			),
 		}
