@@ -9,9 +9,7 @@ use sp_io::crypto::{
 };
 use sp_std::collections::btree_set::BTreeSet;
 
-use crate::{
-	mock::*, CredentialConfig, CredentialType, Credentials, Error, Event, MaxPublicKeySize,
-};
+use crate::{mock::*, Config, CredentialConfig, CredentialType, Credentials, Error, Event};
 
 type AccountId = <Test as frame_system::Config>::AccountId;
 
@@ -63,7 +61,7 @@ fn register_credential_ecdsa() {
 		initialize_to_block(1);
 		let owner = acc(1);
 		let invalid_public_key = sr25519_generate(0.into(), None);
-		let invalid_public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
+		let invalid_public_key_bytes: BoundedVec<u8, <Test as Config>::MaxPublicKeySize> =
 			invalid_public_key.encode().try_into().unwrap();
 
 		let public: ecdsa::Public = ecdsa_generate(0.into(), None);
@@ -139,11 +137,11 @@ fn register_credential_sr25519() {
 		initialize_to_block(1);
 		let owner = acc(1);
 		let invalid_public_key = ecdsa_generate(0.into(), None);
-		let invalid_public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
+		let invalid_public_key_bytes: BoundedVec<u8, <Test as Config>::MaxPublicKeySize> =
 			invalid_public_key.encode().try_into().unwrap();
 
 		let public: sr25519::Public = sr25519_generate(0.into(), None);
-		let public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
+		let public_key_bytes: BoundedVec<u8, <Test as Config>::MaxPublicKeySize> =
 			public.encode().try_into().unwrap();
 		assert_eq!(Credentials::<Test>::get(owner.clone(), public_key_bytes.clone()), None);
 		assert_noop!(
@@ -209,11 +207,11 @@ fn register_credential_ed25519() {
 		initialize_to_block(1);
 		let owner = acc(1);
 		let invalid_public_key = ecdsa_generate(0.into(), None);
-		let invalid_public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
+		let invalid_public_key_bytes: BoundedVec<u8, <Test as Config>::MaxPublicKeySize> =
 			invalid_public_key.encode().try_into().unwrap();
 
 		let public: ed25519::Public = ed25519_generate(0.into(), None);
-		let public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
+		let public_key_bytes: BoundedVec<u8, <Test as Config>::MaxPublicKeySize> =
 			public.encode().try_into().unwrap();
 		assert_eq!(Credentials::<Test>::get(owner.clone(), public_key_bytes.clone()), None);
 		assert_noop!(
@@ -279,7 +277,7 @@ fn check_smart_signature_ecdsa() {
 		initialize_to_block(1);
 		let owner = acc(1);
 		let public: ecdsa::Public = ecdsa_generate(0.into(), None);
-		let public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
+		let public_key_bytes: BoundedVec<u8, <Test as Config>::MaxPublicKeySize> =
 			public.encode().try_into().unwrap();
 		SmartAccounts::register_credentials(
 			RuntimeOrigin::signed(owner.clone()),
@@ -309,7 +307,7 @@ fn check_smart_signature_ethereum() {
 		initialize_to_block(1);
 		let owner = acc(1);
 		let public: ecdsa::Public = ecdsa_generate(0.into(), None);
-		let public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
+		let public_key_bytes: BoundedVec<u8, <Test as Config>::MaxPublicKeySize> =
 			public.encode().try_into().unwrap();
 		SmartAccounts::register_credentials(
 			RuntimeOrigin::signed(owner.clone()),
@@ -344,7 +342,7 @@ fn check_smart_signature_sr25519() {
 		initialize_to_block(1);
 		let owner = acc(1);
 		let public: sr25519::Public = sr25519_generate(0.into(), None);
-		let public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
+		let public_key_bytes: BoundedVec<u8, <Test as Config>::MaxPublicKeySize> =
 			public.encode().try_into().unwrap();
 		SmartAccounts::register_credentials(
 			RuntimeOrigin::signed(owner.clone()),
@@ -377,7 +375,7 @@ fn check_smart_signature_ed25519() {
 		initialize_to_block(1);
 		let owner = acc(1);
 		let public: ed25519::Public = ed25519_generate(0.into(), None);
-		let public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
+		let public_key_bytes: BoundedVec<u8, <Test as Config>::MaxPublicKeySize> =
 			public.encode().try_into().unwrap();
 		SmartAccounts::register_credentials(
 			RuntimeOrigin::signed(owner.clone()),
@@ -417,7 +415,7 @@ mod bls {
 			let private = blst::min_pk::SecretKey::key_gen(&seed, &[])
 				.expect("BLS private key creation from seed should work");
 			let public = private.sk_to_pk();
-			let public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
+			let public_key_bytes: BoundedVec<u8, <Test as Config>::MaxPublicKeySize> =
 				public.serialize().as_slice().to_vec().try_into().unwrap();
 			SmartAccounts::register_credentials(
 				RuntimeOrigin::signed(owner.clone()),
@@ -450,13 +448,13 @@ mod bls {
 			initialize_to_block(1);
 			let owner = acc(1);
 			let invalid_public_key = blst::min_pk::SecretKey::key_gen(&[1u8; 32], &[]).unwrap();
-			let invalid_public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
+			let invalid_public_key_bytes: BoundedVec<u8, <Test as Config>::MaxPublicKeySize> =
 				invalid_public_key.serialize().as_slice().to_vec().try_into().unwrap();
 
 			let private = blst::min_pk::SecretKey::key_gen(&[5u8; 32], &[])
 				.expect("BLS private key creation from seed should work");
 			let public = private.sk_to_pk();
-			let public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
+			let public_key_bytes: BoundedVec<u8, <Test as Config>::MaxPublicKeySize> =
 				public.serialize().as_slice().to_vec().try_into().unwrap();
 			assert_eq!(Credentials::<Test>::get(owner.clone(), public_key_bytes.clone()), None);
 			assert_noop!(
@@ -570,7 +568,7 @@ qcEicKnd2sTeLzLq8qo8avs=
 			let private = RsaPrivateKey::from_pkcs8_pem(RSA_PRIVATE)
 				.expect("RSA private key creation from pem should work");
 			let public = private.to_public_key();
-			let public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
+			let public_key_bytes: BoundedVec<u8, <Test as Config>::MaxPublicKeySize> =
 				public.to_public_key_der().unwrap().as_bytes().to_vec().try_into().unwrap();
 			SmartAccounts::register_credentials(
 				RuntimeOrigin::signed(owner.clone()),

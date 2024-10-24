@@ -124,15 +124,6 @@ pub mod pallet {
 		pub cred_type: CredentialType,
 	}
 
-	/// The maximum length of a public key. Whenever new public key types are added
-	/// this value must be increased if needed.
-	pub struct MaxPublicKeySize;
-	impl Get<u32> for MaxPublicKeySize {
-		fn get() -> u32 {
-			1024
-		}
-	}
-
 	#[pallet::pallet]
 	pub struct Pallet<T>(_);
 
@@ -145,6 +136,10 @@ pub mod pallet {
 		#[pallet::constant]
 		type SignaturePrelude: Get<[u8; 8]>;
 
+		/// The maximum length of a public key. Whenever new public key types are added
+		/// this value must be increased if needed.
+		type MaxPublicKeySize: Get<u32>;
+
 		/// Type representing the weight of this pallet.
 		type WeightInfo: WeightInfo;
 	}
@@ -156,7 +151,7 @@ pub mod pallet {
 		Blake2_128Concat,
 		T::AccountId, // smart account
 		Blake2_128Concat,
-		BoundedVec<u8, MaxPublicKeySize>, // public key that is allowed to access the account
+		BoundedVec<u8, T::MaxPublicKeySize>, // public key that is allowed to access the account
 		CredentialConfig,
 		OptionQuery,
 	>;
@@ -185,13 +180,13 @@ pub mod pallet {
 		/// A new credential was registered.
 		CredentialRegistered {
 			account: T::AccountId,
-			public_key: BoundedVec<u8, MaxPublicKeySize>,
+			public_key: BoundedVec<u8, T::MaxPublicKeySize>,
 			config: CredentialConfig,
 		},
 		/// A credential was removed.
 		CredentialUnregistered {
 			account: T::AccountId,
-			public_key: BoundedVec<u8, MaxPublicKeySize>,
+			public_key: BoundedVec<u8, T::MaxPublicKeySize>,
 		},
 	}
 
@@ -221,7 +216,7 @@ pub mod pallet {
 		#[pallet::weight(T::WeightInfo::generate_account(credentials.len() as u32))]
 		pub fn generate_account(
 			origin: OriginFor<T>,
-			credentials: Vec<(BoundedVec<u8, MaxPublicKeySize>, CredentialConfig)>,
+			credentials: Vec<(BoundedVec<u8, T::MaxPublicKeySize>, CredentialConfig)>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			ensure!(!credentials.len().is_zero(), Error::<T>::TooFewCredentials);
@@ -260,7 +255,7 @@ pub mod pallet {
 		#[pallet::weight(T::WeightInfo::register_credentials(credentials.len() as u32))]
 		pub fn register_credentials(
 			origin: OriginFor<T>,
-			credentials: Vec<(BoundedVec<u8, MaxPublicKeySize>, CredentialConfig)>,
+			credentials: Vec<(BoundedVec<u8, T::MaxPublicKeySize>, CredentialConfig)>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			ensure!(!credentials.len().is_zero(), Error::<T>::TooFewCredentials);
@@ -291,7 +286,7 @@ pub mod pallet {
 		#[pallet::weight(T::WeightInfo::unregister_credential())]
 		pub fn unregister_credential(
 			origin: OriginFor<T>,
-			public_key: BoundedVec<u8, MaxPublicKeySize>,
+			public_key: BoundedVec<u8, T::MaxPublicKeySize>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			Credentials::<T>::mutate_exists(
@@ -341,11 +336,11 @@ pub mod pallet {
 
 		fn do_register_credential(
 			who: &T::AccountId,
-			public_key: BoundedVec<u8, MaxPublicKeySize>,
+			public_key: BoundedVec<u8, T::MaxPublicKeySize>,
 			config: CredentialConfig,
 		) -> DispatchResult {
 			ensure!(
-				public_key.len() <= MaxPublicKeySize::get() as usize,
+				public_key.len() <= T::MaxPublicKeySize::get() as usize,
 				Error::<T>::InvalidPublicKeyLength
 			);
 			let public_key = match config.cred_type {
