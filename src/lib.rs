@@ -263,7 +263,6 @@ pub mod pallet {
 			ensure!(!credentials.len().is_zero(), Error::<T>::TooFewCredentials);
 
 			for (public_key, config) in credentials {
-				// TODO charge fee?
 				Self::do_register_credential(&who, public_key, config)?;
 			}
 			Ok(())
@@ -298,7 +297,6 @@ pub mod pallet {
 				|maybe_credential| -> DispatchResult {
 					ensure!(maybe_credential.is_some(), Error::<T>::CredentialDoesNotExist);
 					Self::deposit_event(Event::CredentialUnregistered { account: who, public_key });
-					// TODO release fee?
 					*maybe_credential = None;
 
 					Ok(())
