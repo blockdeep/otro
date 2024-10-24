@@ -72,12 +72,9 @@ where
 	) -> bool {
 		match self {
 			Self::Native(native_signature) => native_signature.verify(msg, signer),
-			Self::Smart(public_key, signature, _) => Credential::is_valid(
-				public_key.as_slice(),
-				signature.as_slice(),
-				signer,
-				msg.get(),
-			),
+			Self::Smart(public_key, signature, _) => {
+				Credential::is_valid(public_key.as_slice(), signature.as_slice(), signer, msg.get())
+			},
 		}
 	}
 }

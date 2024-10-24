@@ -509,3 +509,165 @@ mod bls {
 		});
 	}
 }
+
+#[cfg(feature = "rsa")]
+mod rsa {
+	use super::*;
+	use ::rsa::pss::BlindedSigningKey;
+	use ::rsa::signature::{RandomizedSigner, SignatureEncoding};
+	use ::rsa::{
+		pkcs8::{DecodePrivateKey, EncodePublicKey},
+		RsaPrivateKey,
+	};
+
+	const RSA_PRIVATE: &str = "-----BEGIN PRIVATE KEY-----
+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
+qcEicKnd2sTeLzLq8qo8avs=
+-----END PRIVATE KEY-----
+";
+
+	#[test]
+	fn check_smart_signature_rsa() {
+		new_test_ext().execute_with(|| {
+			initialize_to_block(1);
+			let owner = acc(1);
+			let private = RsaPrivateKey::from_pkcs8_pem(RSA_PRIVATE)
+				.expect("RSA private key creation from pem should work");
+			let public = private.to_public_key();
+			let public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
+				public.to_public_key_der().unwrap().as_bytes().to_vec().try_into().unwrap();
+			SmartAccounts::register_credentials(
+				RuntimeOrigin::signed(owner.clone()),
+				vec![(
+					public_key_bytes.clone(),
+					CredentialConfig { cred_type: CredentialType::Rsa },
+				)],
+			)
+			.expect("RSA public key registration should be valid");
+			assert_eq!(
+				Credentials::<Test>::get(owner.clone(), public_key_bytes.clone()),
+				Some(CredentialConfig { cred_type: CredentialType::Rsa })
+			);
+
+			let mut rng = rand::thread_rng();
+			let payload = b"RSA signature should work";
+			let signing_key = BlindedSigningKey::<blake2::Blake2s256>::new(private);
+			let signature = signing_key.sign_with_rng(&mut rng, payload);
+			SmartAccounts::check_smart_signature(
+				&owner,
+				public_key_bytes.as_slice(),
+				signature.to_bytes().as_ref(),
+				payload.as_slice(),
+			)
+			.expect("RSA smart signature should be valid");
+		});
+	}
+
+	#[test]
+	fn register_credential_rsa() {
+		new_test_ext().execute_with(|| {
+			initialize_to_block(1);
+			let owner = acc(1);
+			let invalid_private_key =
+				RsaPrivateKey::from_p_q(7u128.into(), 11u128.into(), 13u128.into()).unwrap();
+			let invalid_public_key_bytes: BoundedVec<u8, MaxPublicKeySize> = invalid_private_key
+				.to_public_key()
+				.to_public_key_der()
+				.unwrap()
+				.as_bytes()
+				.to_vec()
+				.try_into()
+				.unwrap();
+
+			let private = RsaPrivateKey::from_pkcs8_pem(RSA_PRIVATE)
+				.expect("RSA private key creation from pem should work");
+			let public = private.to_public_key();
+			let public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
+				public.to_public_key_der().unwrap().as_bytes().to_vec().try_into().unwrap();
+			assert_eq!(Credentials::<Test>::get(owner.clone(), public_key_bytes.clone()), None);
+			assert_noop!(
+				SmartAccounts::register_credentials(
+					RuntimeOrigin::signed(owner.clone()),
+					vec![(
+						public_key_bytes.clone(),
+						CredentialConfig { cred_type: CredentialType::Sr25519 },
+					)],
+				),
+				Error::<Test>::InvalidPublicKeyLength
+			);
+			assert_noop!(
+				SmartAccounts::register_credentials(
+					RuntimeOrigin::signed(owner.clone()),
+					vec![(
+						public_key_bytes.clone(),
+						CredentialConfig { cred_type: CredentialType::Ed25519 },
+					)],
+				),
+				Error::<Test>::InvalidPublicKeyLength
+			);
+			assert_noop!(
+				SmartAccounts::register_credentials(
+					RuntimeOrigin::signed(owner.clone()),
+					vec![(
+						invalid_public_key_bytes.clone(),
+						CredentialConfig { cred_type: CredentialType::Ecdsa },
+					)],
+				),
+				Error::<Test>::InvalidPublicKeyLength
+			);
+			SmartAccounts::register_credentials(
+				RuntimeOrigin::signed(owner.clone()),
+				vec![(
+					public_key_bytes.clone(),
+					CredentialConfig { cred_type: CredentialType::Rsa },
+				)],
+			)
+			.expect("RSA credential should be successfully registered");
+			assert_eq!(
+				Credentials::<Test>::get(owner.clone(), public_key_bytes.clone()),
+				Some(CredentialConfig { cred_type: CredentialType::Rsa })
+			);
+			System::assert_last_event(RuntimeEvent::SmartAccounts(Event::CredentialRegistered {
+				account: owner.clone(),
+				public_key: public_key_bytes,
+				config: CredentialConfig { cred_type: CredentialType::Rsa },
+			}));
+		});
+	}
+}

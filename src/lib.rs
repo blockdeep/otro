@@ -112,6 +112,9 @@ pub mod pallet {
 		#[cfg(feature = "bls")]
 		/// A BLS signature.
 		Bls,
+		#[cfg(feature = "rsa")]
+		/// A RSA signature.
+		Rsa,
 	}
 
 	/// A credential configuration. Valid for a particular association of an AccountId with
@@ -126,7 +129,7 @@ pub mod pallet {
 	pub struct MaxPublicKeySize;
 	impl Get<u32> for MaxPublicKeySize {
 		fn get() -> u32 {
-			128
+			1024
 		}
 	}
 
@@ -381,6 +384,17 @@ pub mod pallet {
 						.map_err(|_| Error::<T>::InvalidPublicKey)?;
 					public.serialize().as_slice().to_vec()
 				},
+				#[cfg(feature = "rsa")]
+				CredentialType::Rsa => {
+					use rsa::pkcs8::{DecodePublicKey, EncodePublicKey};
+					let public = rsa::RsaPublicKey::from_public_key_der(public_key.as_slice())
+						.map_err(|_| Error::<T>::InvalidPublicKey)?;
+					public
+						.to_public_key_der()
+						.map_err(|_| Error::<T>::InvalidPublicKey)?
+						.as_bytes()
+						.to_vec()
+				},
 			};
 			let truncated_public_key = BoundedVec::truncate_from(public_key);
 			Credentials::<T>::insert(who, truncated_public_key.clone(), config.clone());
@@ -443,6 +457,20 @@ pub mod pallet {
 						.map_err(|_| Error::<T>::InvalidPublicKey)?;
 					let err = signature.verify(true, payload, &[], &[], &public_key, true);
 					err == blst::BLST_ERROR::BLST_SUCCESS
+				},
+				#[cfg(feature = "rsa")]
+				CredentialType::Rsa => {
+					use rsa::pkcs8::DecodePublicKey;
+					use rsa::signature::Verifier;
+
+					let public_key = rsa::RsaPublicKey::from_public_key_der(public_key_bytes)
+						.map_err(|_| Error::<T>::InvalidPublicKey)?;
+					let verifying_key =
+						rsa::pss::VerifyingKey::<blake2::Blake2s256>::new(public_key);
+					let signature = rsa::pss::Signature::try_from(signature_bytes)
+						.map_err(|_| Error::<T>::InvalidSignature)?;
+					let r = verifying_key.verify(payload, &signature);
+					r.is_ok()
 				},
 			};
 			ensure!(verified, Error::<T>::InvalidSignature);

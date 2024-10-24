@@ -36,12 +36,14 @@ mod benchmarks {
 		#[extrinsic_call]
 		_(RawOrigin::Signed(caller.clone()), credentials.clone());
 
-		let generated_account =
-			SmartAccounts::<T>::generate_account_from_entropy(&caller).unwrap();
+		let generated_account = SmartAccounts::<T>::generate_account_from_entropy(&caller).unwrap();
 
 		assert_has_event::<T>(
-			Event::<T>::SmartAccountGenerated { generator: caller, account: generated_account.clone() }
-				.into(),
+			Event::<T>::SmartAccountGenerated {
+				generator: caller,
+				account: generated_account.clone(),
+			}
+			.into(),
 		);
 		for credential in credentials {
 			assert_has_event::<T>(
