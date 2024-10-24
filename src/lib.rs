@@ -112,6 +112,9 @@ pub mod pallet {
 		#[cfg(feature = "bls")]
 		/// A BLS signature.
 		Bls,
+		#[cfg(feature = "rsa")]
+		/// A RSA signature.
+		Rsa,
 	}
 
 	/// A credential configuration. Valid for a particular association of an AccountId with
@@ -119,15 +122,6 @@ pub mod pallet {
 	#[derive(Clone, Debug, Encode, Decode, PartialEq, Eq, TypeInfo, MaxEncodedLen)]
 	pub struct CredentialConfig {
 		pub cred_type: CredentialType,
-	}
-
-	/// The maximum length of a public key. Whenever new public key types are added
-	/// this value must be increased if needed.
-	pub struct MaxPublicKeySize;
-	impl Get<u32> for MaxPublicKeySize {
-		fn get() -> u32 {
-			128
-		}
 	}
 
 	#[pallet::pallet]
@@ -142,6 +136,9 @@ pub mod pallet {
 		#[pallet::constant]
 		type SignaturePrelude: Get<[u8; 8]>;
 
+		/// The maximum length of a public key, in bytes.
+		type MaxPublicKeySize: Get<u32>;
+
 		/// Type representing the weight of this pallet.
 		type WeightInfo: WeightInfo;
 	}
@@ -153,7 +150,7 @@ pub mod pallet {
 		Blake2_128Concat,
 		T::AccountId, // smart account
 		Blake2_128Concat,
-		BoundedVec<u8, MaxPublicKeySize>, // public key that is allowed to access the account
+		BoundedVec<u8, T::MaxPublicKeySize>, // public key that is allowed to access the account
 		CredentialConfig,
 		OptionQuery,
 	>;
@@ -182,14 +179,26 @@ pub mod pallet {
 		/// A new credential was registered.
 		CredentialRegistered {
 			account: T::AccountId,
-			public_key: BoundedVec<u8, MaxPublicKeySize>,
+			public_key: BoundedVec<u8, T::MaxPublicKeySize>,
 			config: CredentialConfig,
 		},
 		/// A credential was removed.
 		CredentialUnregistered {
 			account: T::AccountId,
-			public_key: BoundedVec<u8, MaxPublicKeySize>,
+			public_key: BoundedVec<u8, T::MaxPublicKeySize>,
 		},
+	}
+
+	#[pallet::hooks]
+	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
+		fn integrity_test() {
+			Self::do_try_state().expect("Failure performing the integrity test");
+		}
+
+		#[cfg(feature = "try-runtime")]
+		fn try_state(_: BlockNumberFor<T>) -> Result<(), sp_runtime::TryRuntimeError> {
+			Self::do_try_state()
+		}
 	}
 
 	#[pallet::call]
@@ -218,7 +227,7 @@ pub mod pallet {
 		#[pallet::weight(T::WeightInfo::generate_account(credentials.len() as u32))]
 		pub fn generate_account(
 			origin: OriginFor<T>,
-			credentials: Vec<(BoundedVec<u8, MaxPublicKeySize>, CredentialConfig)>,
+			credentials: Vec<(BoundedVec<u8, T::MaxPublicKeySize>, CredentialConfig)>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			ensure!(!credentials.len().is_zero(), Error::<T>::TooFewCredentials);
@@ -257,7 +266,7 @@ pub mod pallet {
 		#[pallet::weight(T::WeightInfo::register_credentials(credentials.len() as u32))]
 		pub fn register_credentials(
 			origin: OriginFor<T>,
-			credentials: Vec<(BoundedVec<u8, MaxPublicKeySize>, CredentialConfig)>,
+			credentials: Vec<(BoundedVec<u8, T::MaxPublicKeySize>, CredentialConfig)>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			ensure!(!credentials.len().is_zero(), Error::<T>::TooFewCredentials);
@@ -288,7 +297,7 @@ pub mod pallet {
 		#[pallet::weight(T::WeightInfo::unregister_credential())]
 		pub fn unregister_credential(
 			origin: OriginFor<T>,
-			public_key: BoundedVec<u8, MaxPublicKeySize>,
+			public_key: BoundedVec<u8, T::MaxPublicKeySize>,
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 			Credentials::<T>::mutate_exists(
@@ -338,11 +347,11 @@ pub mod pallet {
 
 		fn do_register_credential(
 			who: &T::AccountId,
-			public_key: BoundedVec<u8, MaxPublicKeySize>,
+			public_key: BoundedVec<u8, T::MaxPublicKeySize>,
 			config: CredentialConfig,
 		) -> DispatchResult {
 			ensure!(
-				public_key.len() <= MaxPublicKeySize::get() as usize,
+				public_key.len() <= T::MaxPublicKeySize::get() as usize,
 				Error::<T>::InvalidPublicKeyLength
 			);
 			let public_key = match config.cred_type {
@@ -381,6 +390,17 @@ pub mod pallet {
 						.map_err(|_| Error::<T>::InvalidPublicKey)?;
 					public.serialize().as_slice().to_vec()
 				},
+				#[cfg(feature = "rsa")]
+				CredentialType::Rsa => {
+					use rsa::pkcs8::{DecodePublicKey, EncodePublicKey};
+					let public = rsa::RsaPublicKey::from_public_key_der(public_key.as_slice())
+						.map_err(|_| Error::<T>::InvalidPublicKey)?;
+					public
+						.to_public_key_der()
+						.map_err(|_| Error::<T>::InvalidPublicKey)?
+						.as_bytes()
+						.to_vec()
+				},
 			};
 			let truncated_public_key = BoundedVec::truncate_from(public_key);
 			Credentials::<T>::insert(who, truncated_public_key.clone(), config.clone());
@@ -389,6 +409,11 @@ pub mod pallet {
 				public_key: truncated_public_key,
 				config,
 			});
+			Ok(())
+		}
+
+		fn do_try_state() -> Result<(), sp_runtime::TryRuntimeError> {
+			ensure!(T::MaxPublicKeySize::get() >= 128, "The minimum signature length is 128 bytes");
 			Ok(())
 		}
 
@@ -443,6 +468,20 @@ pub mod pallet {
 						.map_err(|_| Error::<T>::InvalidPublicKey)?;
 					let err = signature.verify(true, payload, &[], &[], &public_key, true);
 					err == blst::BLST_ERROR::BLST_SUCCESS
+				},
+				#[cfg(feature = "rsa")]
+				CredentialType::Rsa => {
+					use rsa::pkcs8::DecodePublicKey;
+					use rsa::signature::Verifier;
+
+					let public_key = rsa::RsaPublicKey::from_public_key_der(public_key_bytes)
+						.map_err(|_| Error::<T>::InvalidPublicKey)?;
+					let verifying_key =
+						rsa::pss::VerifyingKey::<blake2::Blake2s256>::new(public_key);
+					let signature = rsa::pss::Signature::try_from(signature_bytes)
+						.map_err(|_| Error::<T>::InvalidSignature)?;
+					let r = verifying_key.verify(payload, &signature);
+					r.is_ok()
 				},
 			};
 			ensure!(verified, Error::<T>::InvalidSignature);

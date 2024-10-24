@@ -33,11 +33,13 @@ impl frame_system::Config for Test {
 
 parameter_types! {
 	pub const SignaturePrelude: [u8; 8] = *b"sigprlud";
+	pub const MaxPublicKeySize: u32 = 1024;
 }
 
 impl Config for Test {
 	type RuntimeEvent = RuntimeEvent;
 	type SignaturePrelude = SignaturePrelude;
+	type MaxPublicKeySize = MaxPublicKeySize;
 	type WeightInfo = ();
 }
 

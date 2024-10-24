@@ -26,7 +26,7 @@ mod benchmarks {
 		let mut credentials = Vec::with_capacity(c as usize);
 		for _ in 0..c {
 			let public: ecdsa::Public = ecdsa_generate(0.into(), None);
-			let public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
+			let public_key_bytes: BoundedVec<u8, T::MaxPublicKeySize> =
 				public.encode().try_into().unwrap();
 			let credential =
 				(public_key_bytes, CredentialConfig { cred_type: CredentialType::Ecdsa });
@@ -36,12 +36,14 @@ mod benchmarks {
 		#[extrinsic_call]
 		_(RawOrigin::Signed(caller.clone()), credentials.clone());
 
-		let generated_account =
-			SmartAccounts::<T>::generate_account_from_entropy(&caller).unwrap();
+		let generated_account = SmartAccounts::<T>::generate_account_from_entropy(&caller).unwrap();
 
 		assert_has_event::<T>(
-			Event::<T>::SmartAccountGenerated { generator: caller, account: generated_account.clone() }
-				.into(),
+			Event::<T>::SmartAccountGenerated {
+				generator: caller,
+				account: generated_account.clone(),
+			}
+			.into(),
 		);
 		for credential in credentials {
 			assert_has_event::<T>(
@@ -66,7 +68,7 @@ mod benchmarks {
 		let mut credentials = Vec::with_capacity(c as usize);
 		for _ in 0..c {
 			let public: ecdsa::Public = ecdsa_generate(0.into(), None);
-			let public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
+			let public_key_bytes: BoundedVec<u8, T::MaxPublicKeySize> =
 				public.encode().try_into().unwrap();
 			let credential =
 				(public_key_bytes, CredentialConfig { cred_type: CredentialType::Ecdsa });
@@ -95,7 +97,7 @@ mod benchmarks {
 
 		let mut credentials = Vec::new();
 		let public: ecdsa::Public = ecdsa_generate(0.into(), None);
-		let public_key_bytes: BoundedVec<u8, MaxPublicKeySize> =
+		let public_key_bytes: BoundedVec<u8, T::MaxPublicKeySize> =
 			public.encode().try_into().unwrap();
 		let credential =
 			(public_key_bytes.clone(), CredentialConfig { cred_type: CredentialType::Ecdsa });
