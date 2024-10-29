@@ -356,7 +356,10 @@ fn check_smart_signature_ethereum_address() {
 		initialize_to_block(1);
 		let owner = acc(1);
 		let public: ecdsa::Public = ecdsa_generate(0.into(), None);
-		let ethereum_address = Keccak256::digest(public.encode().as_slice())[12..].to_vec();
+		let public_full =
+			libsecp256k1::PublicKey::parse_slice(public.encode().as_slice(), None).unwrap();
+		let ethereum_address = Keccak256::digest(&public_full.serialize()[1..])[12..].to_vec();
+		assert_eq!(ethereum_address.len(), 20);
 		let ethereum_address_bytes: BoundedVec<u8, <Test as Config>::MaxPublicKeySize> =
 			ethereum_address.try_into().unwrap();
 		Otro::register_credentials(
