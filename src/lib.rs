@@ -498,7 +498,7 @@ pub mod pallet {
 								Keccak256::digest(computed_public_key)[12..].to_vec();
 							ethereum_address.as_slice() == public_key_bytes
 						},
-						_ => false,
+						_ => return Err(Error::<T>::InvalidPublicKey.into()),
 					}
 				},
 				#[cfg(feature = "bls")]
