@@ -44,7 +44,7 @@ Each credential consists of a public key and a configuration detailing the allow
 
 ## Integration
 
-To integrate the `Smart Accounts` pallet with your runtime, you need to redefine the signature type used in your blockchain.
+To integrate the `Otro` pallet with your runtime, you need to redefine the signature type used in your blockchain.
 Replace the default Substrate signature with `NativeOrSmartSignature` to enable compatibility with both native and smart signatures.
 Modify your runtime as follows:
 
