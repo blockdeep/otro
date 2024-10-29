@@ -90,13 +90,16 @@ pub mod pallet {
 	use frame_system::pallet_prelude::*;
 	use parity_scale_codec::Encode;
 	use sha3::{Digest, Keccak256};
+	use sp_core::hexdisplay::AsBytesRef;
 	use sp_core::{ecdsa, ed25519, sr25519, ByteArray};
-	use sp_io::crypto::{ecdsa_verify, ecdsa_verify_prehashed, ed25519_verify, sr25519_verify};
+	use sp_io::crypto::{ecdsa_verify, ed25519_verify, sr25519_verify};
 	use sp_io::hashing::blake2_256;
 	use sp_runtime::traits::BlockNumberProvider;
 	use sp_std::vec::Vec;
 
 	use super::*;
+
+	const ETHEREUM_ADDRESS_LENGTH: usize = 20;
 
 	/// Signing schemas accepted by this pallet.
 	#[derive(Clone, Debug, Encode, Decode, PartialEq, Eq, TypeInfo, MaxEncodedLen)]
@@ -107,7 +110,7 @@ pub mod pallet {
 		Sr25519,
 		/// An ECDSA signature.
 		Ecdsa,
-		/// An Ethereum signature.
+		/// An Ethereum signature or address.
 		Ethereum,
 		#[cfg(feature = "bls")]
 		/// A BLS signature.
@@ -373,7 +376,7 @@ pub mod pallet {
 						.map_err(|_| Error::<T>::InvalidPublicKey)?
 						.to_vec()
 				},
-				CredentialType::Ecdsa | CredentialType::Ethereum => {
+				CredentialType::Ecdsa => {
 					ensure!(
 						public_key.len() == ecdsa::PUBLIC_KEY_SERIALIZED_SIZE,
 						Error::<T>::InvalidPublicKeyLength
@@ -383,6 +386,20 @@ pub mod pallet {
 					libsecp256k1::PublicKey::parse_slice(public.as_slice(), None)
 						.map_err(|_| Error::<T>::InvalidPublicKey)?;
 					public.to_vec()
+				},
+				CredentialType::Ethereum => {
+					match public_key.len() {
+						ecdsa::PUBLIC_KEY_SERIALIZED_SIZE => {
+							let public = ecdsa::Public::try_from(public_key.as_slice())
+								.map_err(|_| Error::<T>::InvalidPublicKey)?;
+							libsecp256k1::PublicKey::parse_slice(public.as_slice(), None)
+								.map_err(|_| Error::<T>::InvalidPublicKey)?;
+							public.to_vec()
+						},
+						// we admit pure Ethereum addresses, which can be derived from ECDSA public keys
+						ETHEREUM_ADDRESS_LENGTH => public_key.to_vec(),
+						_ => return Err(Error::<T>::InvalidPublicKeyLength.into()),
+					}
 				},
 				#[cfg(feature = "bls")]
 				CredentialType::Bls => {
@@ -453,12 +470,22 @@ pub mod pallet {
 				CredentialType::Ethereum => {
 					let signature = ecdsa::Signature::try_from(signature_bytes)
 						.map_err(|_| Error::<T>::InvalidSignature)?;
-					let public_key = ecdsa::Public::try_from(public_key_bytes)
-						.map_err(|_| Error::<T>::InvalidPublicKey)?;
 					// Use the keccak256 hashing algorithm here and then verify with plain ECDSA.
 					let mut hash = [0u8; 32];
 					hash.copy_from_slice(Keccak256::digest(payload).as_slice());
-					ecdsa_verify_prehashed(&signature, &hash, &public_key)
+					let computed_public_key =
+						signature.recover_prehashed(&hash).ok_or(Error::<T>::InvalidSignature)?;
+					match public_key_bytes.len() {
+						ecdsa::PUBLIC_KEY_SERIALIZED_SIZE => {
+							computed_public_key.as_bytes_ref() == public_key_bytes
+						},
+						ETHEREUM_ADDRESS_LENGTH => {
+							let ethereum_address =
+								Keccak256::digest(computed_public_key)[12..].to_vec();
+							ethereum_address.as_slice() == public_key_bytes
+						},
+						_ => false,
+					}
 				},
 				#[cfg(feature = "bls")]
 				CredentialType::Bls => {

@@ -302,7 +302,7 @@ fn check_smart_signature_ecdsa() {
 }
 
 #[test]
-fn check_smart_signature_ethereum() {
+fn check_smart_signature_ethereum_public_key() {
 	new_test_ext().execute_with(|| {
 		initialize_to_block(1);
 		let owner = acc(1);
@@ -316,13 +316,13 @@ fn check_smart_signature_ethereum() {
 				CredentialConfig { cred_type: CredentialType::Ethereum },
 			)],
 		)
-		.expect("Ethereum public key registration should be valid");
+		.expect("Ethereum public key registration should be valid for ECDSA public key");
 		assert_eq!(
 			Credentials::<Test>::get(owner.clone(), public_key_bytes.clone()),
 			Some(CredentialConfig { cred_type: CredentialType::Ethereum })
 		);
 
-		let payload = *b"Ethereum signature should work";
+		let payload = *b"Ethereum signature should work for ECDSA public key";
 		let mut hash = [0u8; 32];
 		hash.copy_from_slice(Keccak256::digest(payload).as_slice());
 		let signature = ecdsa_sign_prehashed(0.into(), &public, &hash).unwrap();
@@ -332,7 +332,43 @@ fn check_smart_signature_ethereum() {
 			signature.as_slice(),
 			payload.as_slice(),
 		)
-		.expect("Ethereum smart signature should be valid");
+		.expect("Ethereum smart signature should be valid ECDSA public key");
+	});
+}
+
+#[test]
+fn check_smart_signature_ethereum_address() {
+	new_test_ext().execute_with(|| {
+		initialize_to_block(1);
+		let owner = acc(1);
+		let public: ecdsa::Public = ecdsa_generate(0.into(), None);
+		let ethereum_address = Keccak256::digest(public.encode().as_slice())[12..].to_vec();
+		let ethereum_address_bytes: BoundedVec<u8, <Test as Config>::MaxPublicKeySize> =
+			ethereum_address.try_into().unwrap();
+		SmartAccounts::register_credentials(
+			RuntimeOrigin::signed(owner.clone()),
+			vec![(
+				ethereum_address_bytes.clone(),
+				CredentialConfig { cred_type: CredentialType::Ethereum },
+			)],
+		)
+		.expect("Ethereum address registration should be valid for Ethereum address");
+		assert_eq!(
+			Credentials::<Test>::get(owner.clone(), ethereum_address_bytes.clone()),
+			Some(CredentialConfig { cred_type: CredentialType::Ethereum })
+		);
+
+		let payload = *b"Ethereum signature should work for Ethereum address";
+		let mut hash = [0u8; 32];
+		hash.copy_from_slice(Keccak256::digest(payload).as_slice());
+		let signature = ecdsa_sign_prehashed(0.into(), &public, &hash).unwrap();
+		SmartAccounts::check_smart_signature(
+			&owner,
+			ethereum_address_bytes.as_slice(),
+			signature.as_slice(),
+			payload.as_slice(),
+		)
+		.expect("Ethereum smart signature should be valid for Ethereum address");
 	});
 }
 
