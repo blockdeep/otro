@@ -1,8 +1,22 @@
-//! Benchmarking setup for pallet-smart-accounts.
+// Copyright (C) BlockDeep Labs UG.
+// SPDX-License-Identifier: Apache-2.0
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// 	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+//! Benchmarking setup for pallet-otro.
 
 use super::*;
 
-use crate::Pallet as SmartAccounts;
+use crate::Pallet as Otro;
 use frame_benchmarking::{v2::*, whitelisted_caller};
 
 fn assert_has_event<T: Config>(generic_event: <T as Config>::RuntimeEvent) {
@@ -36,7 +50,7 @@ mod benchmarks {
 		#[extrinsic_call]
 		_(RawOrigin::Signed(caller.clone()), credentials.clone());
 
-		let generated_account = SmartAccounts::<T>::generate_account_from_entropy(&caller).unwrap();
+		let generated_account = Otro::<T>::generate_account_from_entropy(&caller).unwrap();
 
 		assert_has_event::<T>(
 			Event::<T>::SmartAccountGenerated {
@@ -102,7 +116,7 @@ mod benchmarks {
 		let credential =
 			(public_key_bytes.clone(), CredentialConfig { cred_type: CredentialType::Ecdsa });
 		credentials.push(credential);
-		SmartAccounts::<T>::register_credentials(
+		Otro::<T>::register_credentials(
 			RawOrigin::Signed(caller.clone()).into(),
 			credentials.clone(),
 		)
@@ -121,5 +135,5 @@ mod benchmarks {
 		assert_eq!(Credentials::<T>::get(caller.clone(), public_key_bytes), None);
 	}
 
-	impl_benchmark_test_suite!(SmartAccounts, crate::mock::new_test_ext(), crate::mock::Test);
+	impl_benchmark_test_suite!(Otro, crate::mock::new_test_ext(), crate::mock::Test);
 }

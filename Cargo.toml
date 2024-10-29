@@ -1,10 +1,10 @@
 [package]
-name = "pallet-smart-accounts"
+name = "pallet-otro"
 version = "0.0.1"
-description = "Pallet to provide smart accounts"
-authors = ["José Molina <jose.molina@blockdeep.io>"]
+description = "Simply pallet to provide smart accounts"
+authors = ["BlockDeep Labs <info@blockdeep.io>"]
 edition = "2021"
-license = "MIT-0"
+license = "Apache-2.0"
 publish = false
 
 [package.metadata.docs.rs]
