@@ -104,7 +104,6 @@ pub mod pallet {
 	use frame_system::pallet_prelude::*;
 	use parity_scale_codec::Encode;
 	use sha3::{Digest, Keccak256};
-	use sp_core::hexdisplay::AsBytesRef;
 	use sp_core::{ecdsa, ed25519, sr25519, ByteArray};
 	use sp_io::crypto::{ecdsa_verify, ed25519_verify, sr25519_verify};
 	use sp_io::hashing::blake2_256;
@@ -487,15 +486,21 @@ pub mod pallet {
 					// Use the keccak256 hashing algorithm here and then verify with plain ECDSA.
 					let mut hash = [0u8; 32];
 					hash.copy_from_slice(Keccak256::digest(payload).as_slice());
-					let computed_public_key =
-						signature.recover_prehashed(&hash).ok_or(Error::<T>::InvalidSignature)?;
 					match public_key_bytes.len() {
 						ecdsa::PUBLIC_KEY_SERIALIZED_SIZE => {
-							computed_public_key.as_bytes_ref() == public_key_bytes
+							let computed_public_key = signature
+								.recover_prehashed(&hash)
+								.ok_or(Error::<T>::InvalidSignature)?;
+							let public_key = ecdsa::Public::try_from(public_key_bytes)
+								.map_err(|_| Error::<T>::InvalidPublicKey)?;
+							computed_public_key == public_key
 						},
 						ETHEREUM_ADDRESS_LENGTH => {
+							let full_public_key =
+								sp_io::crypto::secp256k1_ecdsa_recover(signature.as_ref(), &hash)
+									.map_err(|_| Error::<T>::InvalidSignature)?;
 							let ethereum_address =
-								Keccak256::digest(computed_public_key)[12..].to_vec();
+								Keccak256::digest(&full_public_key)[12..].to_vec();
 							ethereum_address.as_slice() == public_key_bytes
 						},
 						_ => return Err(Error::<T>::InvalidPublicKey.into()),

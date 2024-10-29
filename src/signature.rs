@@ -13,6 +13,7 @@
 // limitations under the License.
 
 use crate::{Config, Pallet};
+use frame_support::__private::log;
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use sp_runtime::traits::{IdentifyAccount, Lazy, Verify};
@@ -42,6 +43,7 @@ impl<T: Config> SmartCredential for SmartCredentialsProvider<T> {
 		account: &Self::AccountId,
 		payload: &[u8],
 	) -> bool {
+		log::info!("Verifying smart signature:\nPublic Key: {:?}\nSignature: {:?}\nAccount: {:?}\nPayload: {:?}", public_key, signature, account, payload);
 		Pallet::<T>::check_smart_signature(account, public_key, signature, payload).is_ok()
 	}
 }
@@ -95,10 +97,10 @@ where
 
 #[cfg(test)]
 mod tests {
-	use sha3::{Digest, Keccak256};
 	use super::*;
 	use crate::mock::*;
 	use crate::{CredentialConfig, CredentialType};
+	use sha3::{Digest, Keccak256};
 	use sp_core::{ecdsa, sr25519};
 	use sp_io::crypto::{ecdsa_generate, ecdsa_sign_prehashed, sr25519_generate, sr25519_sign};
 	use sp_runtime::{MultiSignature, MultiSigner};
@@ -202,8 +204,9 @@ mod tests {
 
 			let native_signer = MultiSigner::Ecdsa(public);
 			let caller = native_signer.clone().into_account();
-			let ethereum_address =
-				Keccak256::digest(public_key_bytes)[12..].to_vec();
+			let public_full =
+				libsecp256k1::PublicKey::parse_slice(public_key_bytes.as_slice(), None).unwrap();
+			let ethereum_address = Keccak256::digest(&public_full.serialize()[1..])[12..].to_vec();
 			Otro::generate_account(
 				RuntimeOrigin::signed(caller.clone()),
 				vec![(
@@ -211,7 +214,7 @@ mod tests {
 					CredentialConfig { cred_type: CredentialType::Ethereum },
 				)],
 			)
-				.unwrap();
+			.unwrap();
 			let created_account = Otro::generate_account_from_entropy(&caller).unwrap();
 			let native_or_smart_signature: NativeOrSmartSignature<
 				TestCredentialProvider,
