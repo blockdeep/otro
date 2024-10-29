@@ -507,8 +507,7 @@ pub mod pallet {
 						rsa::pss::VerifyingKey::<blake2::Blake2s256>::new(public_key);
 					let signature = rsa::pss::Signature::try_from(signature_bytes)
 						.map_err(|_| Error::<T>::InvalidSignature)?;
-					let r = verifying_key.verify(payload, &signature);
-					r.is_ok()
+					verifying_key.verify(payload, &signature).is_ok()
 				},
 			};
 			ensure!(verified, Error::<T>::InvalidSignature);
