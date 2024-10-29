@@ -95,11 +95,12 @@ where
 
 #[cfg(test)]
 mod tests {
+	use sha3::{Digest, Keccak256};
 	use super::*;
 	use crate::mock::*;
 	use crate::{CredentialConfig, CredentialType};
-	use sp_core::sr25519;
-	use sp_io::crypto::{sr25519_generate, sr25519_sign};
+	use sp_core::{ecdsa, sr25519};
+	use sp_io::crypto::{ecdsa_generate, ecdsa_sign_prehashed, sr25519_generate, sr25519_sign};
 	use sp_runtime::{MultiSignature, MultiSigner};
 
 	type TestCredentialProvider = SmartCredentialsProvider<Test>;
@@ -143,7 +144,7 @@ mod tests {
 	#[test]
 	fn native_or_smart_signature_native_verification_should_work() {
 		new_test_ext().execute_with(|| {
-			let payload = [0u8; 32];
+			let payload = *b"test ethereum signature";
 			let public: sr25519::Public = sr25519_generate(0.into(), None);
 			let raw_signature = sr25519_sign(0.into(), &public, &payload).unwrap();
 
@@ -164,7 +165,7 @@ mod tests {
 		new_test_ext().execute_with(|| {
 			let public: sr25519::Public = sr25519_generate(0.into(), None);
 			let public_key_bytes = public.encode();
-			let payload = [0u8; 32];
+			let payload = *b"smart verification should work";
 			let raw_signature = sr25519_sign(0.into(), &public, &payload).unwrap();
 
 			let native_signer = MultiSigner::Sr25519(public);
@@ -185,6 +186,37 @@ mod tests {
 				TestCredentialProvider,
 				MultiSignature,
 			> = NativeOrSmartSignature::new_smart(public_key_bytes.clone(), raw_signature.to_vec());
+			assert!(native_or_smart_signature.verify(&payload[..], &created_account));
+		});
+	}
+
+	#[test]
+	fn native_or_smart_signature_smart_verification_with_ethereum_addresses_should_work() {
+		new_test_ext().execute_with(|| {
+			let public: ecdsa::Public = ecdsa_generate(0.into(), None);
+			let public_key_bytes = public.encode();
+			let payload = b"smart verification with ethereum addresses should work";
+			let mut hash = [0u8; 32];
+			hash.copy_from_slice(Keccak256::digest(payload).as_slice());
+			let raw_signature = ecdsa_sign_prehashed(0.into(), &public, &hash).unwrap();
+
+			let native_signer = MultiSigner::Ecdsa(public);
+			let caller = native_signer.clone().into_account();
+			let ethereum_address =
+				Keccak256::digest(public_key_bytes)[12..].to_vec();
+			Otro::generate_account(
+				RuntimeOrigin::signed(caller.clone()),
+				vec![(
+					ethereum_address.clone().try_into().unwrap(),
+					CredentialConfig { cred_type: CredentialType::Ethereum },
+				)],
+			)
+				.unwrap();
+			let created_account = Otro::generate_account_from_entropy(&caller).unwrap();
+			let native_or_smart_signature: NativeOrSmartSignature<
+				TestCredentialProvider,
+				MultiSignature,
+			> = NativeOrSmartSignature::new_smart(ethereum_address.clone(), raw_signature.to_vec());
 			assert!(native_or_smart_signature.verify(&payload[..], &created_account));
 		});
 	}
