@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//! # Smart Accounts Pallet
+//! # Otro Pallet
 //!
-//! The Smart Accounts Pallet provides mechanisms for handling native and smart signature verification, allowing for more flexible account management. This pallet introduces support for various signature types and credential management, enhancing security and enabling multi-signature scenarios.
+//! The Otro Pallet provides mechanisms for handling native and smart signature verification, allowing for more flexible account management. This pallet introduces support for various signature types and credential management, enhancing security and enabling multi-signature scenarios.
 //!
 //! ## Overview
 //!
@@ -45,7 +45,7 @@
 //!
 //! ## Integration
 //!
-//! To integrate the `Smart Accounts` pallet with your runtime, you need to redefine the signature type used in your blockchain.
+//! To integrate the `Otro` pallet with your runtime, you need to redefine the signature type used in your blockchain.
 //! Replace the default Substrate signature with `NativeOrSmartSignature` to enable compatibility with both native and smart signatures.
 //! Modify your runtime as follows:
 //!
@@ -118,19 +118,19 @@ pub mod pallet {
 	/// Signing schemas accepted by this pallet.
 	#[derive(Clone, Debug, Encode, Decode, PartialEq, Eq, TypeInfo, MaxEncodedLen)]
 	pub enum CredentialType {
-		/// An ED25519 signature.
+		/// An ED25519 public key.
 		Ed25519,
-		/// An SR25519 signature.
+		/// An SR25519 public key.
 		Sr25519,
-		/// An ECDSA signature.
+		/// An ECDSA public key.
 		Ecdsa,
-		/// An Ethereum signature or address.
+		/// An Ethereum's ECDSA public key or address.
 		Ethereum,
 		#[cfg(feature = "bls")]
-		/// A BLS signature.
+		/// A BLS public key.
 		Bls,
 		#[cfg(feature = "rsa")]
-		/// A RSA signature.
+		/// An RSA public key.
 		Rsa,
 	}
 
