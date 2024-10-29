@@ -1,6 +1,6 @@
-# Smart Account Pallet
+# Otro Pallet
 
-The Smart Accounts Pallet provides mechanisms for handling native and smart signature verification, allowing for more flexible account management.
+The Otro Pallet provides mechanisms for handling native and smart signature verification, allowing for more flexible account management.
 This pallet introduces support for various signature types and credential management, enhancing security and enabling multi-signature scenarios.
 
 ## Overview
@@ -51,7 +51,7 @@ Modify your runtime as follows:
 ```rust
 use sp_runtime::MultiSignature;
 use sp_runtime::traits::{IdentifyAccount, Verify};
-use pallet_smart_accounts::{SmartCredentialsProvider, NativeOrSmartSignature};
+use pallet_otro::{SmartCredentialsProvider, NativeOrSmartSignature};
 
 pub struct Runtime;  // your defined runtime
 
@@ -64,7 +64,7 @@ pub type Signature = NativeOrSmartSignature<
 >;
 ```
 
-You will also have to add the `pallet_smart_accounts` to your runtime.
+You will also have to add the `pallet_otro` to your runtime.
 
 ### Regarding MacOS users
 

@@ -1,3 +1,17 @@
+// Copyright (C) BlockDeep Labs UG.
+// SPDX-License-Identifier: Apache-2.0
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// 	http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 use crate::{Config, Pallet};
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
@@ -158,7 +172,7 @@ mod tests {
 			assert!(native_signature.verify(&payload[..], &native_signer.clone().into_account()));
 
 			let caller = native_signer.clone().into_account();
-			SmartAccounts::generate_account(
+			Otro::generate_account(
 				RuntimeOrigin::signed(caller.clone()),
 				vec![(
 					public_key_bytes.clone().try_into().unwrap(),
@@ -166,7 +180,7 @@ mod tests {
 				)],
 			)
 			.unwrap();
-			let created_account = SmartAccounts::generate_account_from_entropy(&caller).unwrap();
+			let created_account = Otro::generate_account_from_entropy(&caller).unwrap();
 			let native_or_smart_signature: NativeOrSmartSignature<
 				TestCredentialProvider,
 				MultiSignature,
