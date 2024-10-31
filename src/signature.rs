@@ -13,7 +13,6 @@
 // limitations under the License.
 
 use crate::{Config, Pallet};
-use frame_support::__private::log;
 use parity_scale_codec::{Decode, Encode};
 use scale_info::TypeInfo;
 use sp_runtime::traits::{IdentifyAccount, Lazy, Verify};
@@ -43,7 +42,6 @@ impl<T: Config> SmartCredential for SmartCredentialsProvider<T> {
 		account: &Self::AccountId,
 		payload: &[u8],
 	) -> bool {
-		log::info!("Verifying smart signature:\nPublic Key: {:?}\nSignature: {:?}\nAccount: {:?}\nPayload: {:?}", public_key, signature, account, payload);
 		Pallet::<T>::check_smart_signature(account, public_key, signature, payload).is_ok()
 	}
 }
