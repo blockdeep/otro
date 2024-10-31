@@ -64,6 +64,3 @@ rsa = [
 	"dep:rsa",
 	"dep:blake2"
 ]
-
-[profile.release.package.num-bigint-dig]
-opt-level = 3
