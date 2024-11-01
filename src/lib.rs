@@ -104,6 +104,8 @@ pub mod pallet {
 	use frame_system::pallet_prelude::*;
 	use parity_scale_codec::Encode;
 	use sha3::{Digest, Keccak256};
+	#[cfg(feature = "bls")]
+	use sp_core::bls;
 	use sp_core::{ecdsa, ed25519, sr25519, ByteArray};
 	use sp_io::crypto::{ecdsa_verify, ed25519_verify, sr25519_verify};
 	use sp_io::hashing::blake2_256;
@@ -416,9 +418,13 @@ pub mod pallet {
 				},
 				#[cfg(feature = "bls")]
 				CredentialType::Bls => {
-					let public = blst::min_pk::PublicKey::deserialize(public_key.as_slice())
-						.map_err(|_| Error::<T>::InvalidPublicKey)?;
-					public.serialize().as_slice().to_vec()
+					ensure!(
+						public_key.len() == bls::PUBLIC_KEY_SERIALIZED_SIZE,
+						Error::<T>::InvalidPublicKeyLength
+					);
+					bls::bls381::Public::try_from(public_key.as_slice())
+						.map_err(|_| Error::<T>::InvalidPublicKey)?
+						.to_vec()
 				},
 				#[cfg(feature = "rsa")]
 				CredentialType::Rsa => {
@@ -508,12 +514,13 @@ pub mod pallet {
 				},
 				#[cfg(feature = "bls")]
 				CredentialType::Bls => {
-					let signature = blst::min_pk::Signature::deserialize(signature_bytes)
+					use sp_core::Pair;
+
+					let signature = bls::bls381::Signature::try_from(signature_bytes)
 						.map_err(|_| Error::<T>::InvalidSignature)?;
-					let public_key = blst::min_pk::PublicKey::deserialize(public_key_bytes)
+					let public_key = bls::bls381::Public::try_from(public_key_bytes)
 						.map_err(|_| Error::<T>::InvalidPublicKey)?;
-					let err = signature.verify(true, payload, &[], &[], &public_key, true);
-					err == blst::BLST_ERROR::BLST_SUCCESS
+					bls::Pair::verify(&signature, payload, &public_key)
 				},
 				#[cfg(feature = "rsa")]
 				CredentialType::Rsa => {

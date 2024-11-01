@@ -458,18 +458,17 @@ fn check_smart_signature_ed25519() {
 #[cfg(feature = "bls")]
 mod bls {
 	use super::*;
+	use sp_core::{bls, Pair};
 
 	#[test]
 	fn check_smart_signature_bls() {
 		new_test_ext().execute_with(|| {
 			initialize_to_block(1);
 			let owner = acc(1);
-			let seed = [5u8; 32];
-			let private = blst::min_pk::SecretKey::key_gen(&seed, &[])
-				.expect("BLS private key creation from seed should work");
-			let public = private.sk_to_pk();
+			let (pair, _) = bls::bls381::Pair::generate();
+			let public = pair.public();
 			let public_key_bytes: BoundedVec<u8, <Test as Config>::MaxPublicKeySize> =
-				public.serialize().as_slice().to_vec().try_into().unwrap();
+				public.as_slice().to_vec().try_into().unwrap();
 			Otro::register_credentials(
 				RuntimeOrigin::signed(owner.clone()),
 				vec![(
@@ -484,11 +483,11 @@ mod bls {
 			);
 
 			let payload = b"BLS signature should work";
-			let signature = private.sign(payload.as_slice(), &[], &[]);
+			let signature = pair.sign(payload.as_slice());
 			Otro::check_smart_signature(
 				&owner,
 				public_key_bytes.as_slice(),
-				signature.to_bytes().as_slice(),
+				signature.as_slice(),
 				payload.as_slice(),
 			)
 			.expect("BLS smart signature should be valid");
@@ -500,15 +499,14 @@ mod bls {
 		new_test_ext().execute_with(|| {
 			initialize_to_block(1);
 			let owner = acc(1);
-			let invalid_public_key = blst::min_pk::SecretKey::key_gen(&[1u8; 32], &[]).unwrap();
+			let invalid_public_key = bls::bls381::Pair::generate().0.public();
 			let invalid_public_key_bytes: BoundedVec<u8, <Test as Config>::MaxPublicKeySize> =
-				invalid_public_key.serialize().as_slice().to_vec().try_into().unwrap();
+				invalid_public_key.as_slice().to_vec().try_into().unwrap();
 
-			let private = blst::min_pk::SecretKey::key_gen(&[5u8; 32], &[])
-				.expect("BLS private key creation from seed should work");
-			let public = private.sk_to_pk();
+			let (pair, _) = bls::bls381::Pair::generate();
+			let public = pair.public();
 			let public_key_bytes: BoundedVec<u8, <Test as Config>::MaxPublicKeySize> =
-				public.serialize().as_slice().to_vec().try_into().unwrap();
+				public.as_slice().to_vec().try_into().unwrap();
 			assert_eq!(Credentials::<Test>::get(owner.clone(), public_key_bytes.clone()), None);
 			assert_noop!(
 				Otro::register_credentials(
