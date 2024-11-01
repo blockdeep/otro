@@ -23,7 +23,7 @@ Currently, the pallet supports the following signature schemas:
 - **BLS** only if the `bls` feature is enabled.
 - **RSA** only if the `rsa` feature is enabled.
 
-Bear in mind that in all cases the payload is expected to be hashed with the `blake2_256` algorithm.
+Bear in mind that in all cases the payload is expected to be hashed with the `blake2_256` algorithm, except Ethereum, which uses `keccak256`.
 
 ## Key Concepts
 
