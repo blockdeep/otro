@@ -66,21 +66,6 @@ pub type Signature = NativeOrSmartSignature<
 
 You will also have to add the `pallet_otro` to your runtime.
 
-### Regarding MacOS users
-
-If the `bls` feature is enabled, you will need to use a different version of clang, since the OS-provided one cannot compile for wasm. To do so follow these steps:
-
-```shell
-# Install LLVM Clang
-brew install llvm
-
-# Verify the installation
-llvm-config --version
-
-# Export the correct PATH
-echo 'export PATH="/opt/homebrew/opt/llvm/bin:$PATH"' >> ~/.zshrc
-```
-
 ## Security Considerations
 
 - **Signature Verification:** Both native and smart signatures undergo strict verification to ensure their validity. This protects against unauthorized transactions.
