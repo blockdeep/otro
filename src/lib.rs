@@ -419,7 +419,7 @@ pub mod pallet {
 				#[cfg(feature = "bls")]
 				CredentialType::Bls => {
 					ensure!(
-						public_key.len() == bls::PUBLIC_KEY_SERIALIZED_SIZE,
+						public_key.len() == bls::bls381::PUBLIC_KEY_SERIALIZED_SIZE,
 						Error::<T>::InvalidPublicKeyLength
 					);
 					bls::bls381::Public::try_from(public_key.as_slice())
@@ -520,7 +520,7 @@ pub mod pallet {
 						.map_err(|_| Error::<T>::InvalidSignature)?;
 					let public_key = bls::bls381::Public::try_from(public_key_bytes)
 						.map_err(|_| Error::<T>::InvalidPublicKey)?;
-					bls::Pair::verify(&signature, payload, &public_key)
+					bls::bls381::Pair::verify(&signature, payload, &public_key)
 				},
 				#[cfg(feature = "rsa")]
 				CredentialType::Rsa => {
