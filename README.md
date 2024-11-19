@@ -1,19 +1,16 @@
 # Otro Pallet
 
-The Otro Pallet provides mechanisms for handling native and smart signature verification, allowing for more flexible account management.
-This pallet introduces support for various signature types and credential management, enhancing security and enabling multi-signature scenarios.
+The Otro Pallet provides a Substrate-native implementation of smart accounts.
 
-## Overview
+A Smart Account, in this context, is a Substrate account that can be controlled through various aliases, each associated with a unique public key. 
+This allows users to sign transactions using any registered alias. For instance, you could receive assets on a Substrate address and spend them using an Ethereum, RSA, or BLS signature. This versatility is what Otro enables.
 
-The pallet allows accounts to use both native signatures (e.g., Ed25519, Sr25519, ECDSA) and smart signatures.
-Smart signatures can involve custom signature methods, enabling enhanced account management scenarios, such as integration with custom wallets or smart contract-based accounts.
+Key functionalities:
+- Generation of smart accounts from owner accounts.
+- Registration and management of credentials.
+- Verification of transactions signed with either owner or aliases.
 
-Key functionalities provided by this pallet include:
-- Generation of smart accounts from native accounts.
-- Registration and management of credentials for accounts.
-- Verification of transactions signed with either native or smart signatures.
-
-## Supported signatures schemas
+## Supported Signatures Schemas
 
 Currently, the pallet supports the following signature schemas:
 - **SR25519**
@@ -23,24 +20,7 @@ Currently, the pallet supports the following signature schemas:
 - **BLS** only if the `bls` feature is enabled.
 - **RSA** only if the `rsa` feature is enabled.
 
-Bear in mind that in all cases the payload is expected to be hashed with the `blake2_256` algorithm, except Ethereum, which uses `keccak256`.
-
-## Key Concepts
-
-### Native and Smart Signatures
-
-- **Native Signature:** A traditional cryptographic signature using common algorithms like Ed25519, Sr25519, and ECDSA.
-- **Smart Signature:** A signature that includes additional custom logic or cryptographic methods. It consists of a public key and the actual signature, supporting various custom signature types.
-
-### Credential Management
-
-Credentials represent public keys and associated configurations that define how an account can be accessed or managed.
-The pallet allows linking multiple credentials to a single account, enabling complex access management scenarios.
-
-### Storage Items
-
-- `Credentials`: A storage double map that holds credentials associated with accounts.
-Each credential consists of a public key and a configuration detailing the allowed operations and signature types.
+Note: In all cases the payload is hashed with the `blake2_256` algorithm, except in Ethereum, which uses `keccak256`.
 
 ## Integration
 
@@ -64,17 +44,9 @@ pub type Signature = NativeOrSmartSignature<
 >;
 ```
 
-You will also have to add the `pallet_otro` to your runtime.
+You will also need to add the `pallet_otro` to your runtime.
 
-## Security Considerations
+## License
 
-- **Signature Verification:** Both native and smart signatures undergo strict verification to ensure their validity. This protects against unauthorized transactions.
-- **Access Control:** Only authorized public keys, as defined in the credential configuration, can interact with an account. This ensures that account operations remain secure.
-- **Replay Protection:** Using nonces or similar mechanisms prevents replay attacks, ensuring each transaction is unique and cannot be reused maliciously.
-
-## Future Enhancements
-
-Future versions of the pallet could support:
-- More complex credential types, such as biometric authentication or hardware key integration.
-- Enhanced user interfaces for managing credentials and smart accounts.
-- Smart contract-based accounts that leverage smart signatures for more sophisticated transaction logic.
+The code within this repository is licensed under Apache-2.0 license. See the [LICENSE](./LICENSE) file for more
+details.
