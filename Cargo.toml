@@ -1,6 +1,6 @@
 [package]
 name = "pallet-otro"
-version = "0.1.0"
+version = "1.0.0"
 description = "Substrate-native implementation of smart accounts."
 authors = ["BlockDeep Labs <info@blockdeep.io>"]
 edition = "2021"
@@ -21,17 +21,17 @@ libsecp256k1 = { version = "0.7.1", default-features = false }
 rsa = { version = "0.9.6", default-features = false, optional = true }
 blake2 = { version = "0.10.6", default-features = false, optional = true }
 sha3 = { version = "0.10.8", default-features = false }
-frame-benchmarking = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-3", default-features = false, optional = true }
-frame-support = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-3", default-features = false }
-frame-system = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-3", default-features = false }
-sp-std = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-3", default-features = false }
-sp-runtime = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-3", default-features = false }
-sp-core = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-3", default-features = false }
-sp-io = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-3", default-features = false }
+frame-benchmarking = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-7", default-features = false, optional = true }
+frame-support = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-7", default-features = false }
+frame-system = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-7", default-features = false }
+sp-std = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-7", default-features = false }
+sp-runtime = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-7", default-features = false }
+sp-core = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-7", default-features = false }
+sp-io = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-7", default-features = false }
 
 [dev-dependencies]
 hex-literal = "0.4.1"
-sp-keystore = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-3" }
+sp-keystore = { git = "https://github.com/paritytech/polkadot-sdk", tag = "polkadot-stable2407-7" }
 rsa = { version = "0.9.6", features = ["pem"] }
 rand = "0.8.5"
 
