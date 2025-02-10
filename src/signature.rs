@@ -95,10 +95,10 @@ where
 
 #[cfg(test)]
 mod tests {
-	use frame_support::assert_ok;
 	use super::*;
 	use crate::mock::*;
 	use crate::{CredentialConfig, CredentialType};
+	use frame_support::assert_ok;
 	use sha3::{Digest, Keccak256};
 	use sp_core::{ecdsa, sr25519};
 	use sp_io::crypto::{ecdsa_generate, ecdsa_sign_prehashed, sr25519_generate, sr25519_sign};
