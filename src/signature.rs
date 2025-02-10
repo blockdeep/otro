@@ -95,6 +95,7 @@ where
 
 #[cfg(test)]
 mod tests {
+	use frame_support::assert_ok;
 	use super::*;
 	use crate::mock::*;
 	use crate::{CredentialConfig, CredentialType};
@@ -173,14 +174,13 @@ mod tests {
 			assert!(native_signature.verify(&payload[..], &native_signer.clone().into_account()));
 
 			let caller = native_signer.clone().into_account();
-			Otro::generate_account(
+			assert_ok!(Otro::generate_account(
 				RuntimeOrigin::signed(caller.clone()),
 				vec![(
 					public_key_bytes.clone().try_into().unwrap(),
 					CredentialConfig { cred_type: CredentialType::Sr25519 },
 				)],
-			)
-			.unwrap();
+			));
 			let created_account = Otro::generate_account_from_entropy(&caller).unwrap();
 			let native_or_smart_signature: NativeOrSmartSignature<
 				TestCredentialProvider,
@@ -205,14 +205,13 @@ mod tests {
 			let public_full =
 				libsecp256k1::PublicKey::parse_slice(public_key_bytes.as_slice(), None).unwrap();
 			let ethereum_address = Keccak256::digest(&public_full.serialize()[1..])[12..].to_vec();
-			Otro::generate_account(
+			assert_ok!(Otro::generate_account(
 				RuntimeOrigin::signed(caller.clone()),
 				vec![(
 					ethereum_address.clone().try_into().unwrap(),
 					CredentialConfig { cred_type: CredentialType::Ethereum },
 				)],
-			)
-			.unwrap();
+			));
 			let created_account = Otro::generate_account_from_entropy(&caller).unwrap();
 			let native_or_smart_signature: NativeOrSmartSignature<
 				TestCredentialProvider,
